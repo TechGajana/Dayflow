@@ -5,45 +5,45 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* ---- Design Tokens — Aurora Emerald & Liquid Gold System ---- */
+/* ---- Design Tokens — Royal Imperial Velvet & Champagne Gold System ---- */
 :root {
   /* Colors */
-  --bg-primary: #020b0d; /* Deep Oceanic Aurora Black */
-  --bg-secondary: #06161a; /* Dark Cyber Emerald Header */
-  --bg-tertiary: #0a2228; /* Satin Jade Container */
-  --bg-card: rgba(10, 34, 40, 0.78); /* Glass Satin Emerald with Aurora Glow */
-  --bg-card-hover: rgba(16, 52, 60, 0.88);
+  --bg-primary: #0b0516; /* Deep Imperial Midnight Velvet */
+  --bg-secondary: #170a2c; /* Rich Royal Amethyst Header */
+  --bg-tertiary: #240f44; /* Satin Imperial Purple Container */
+  --bg-card: rgba(36, 15, 68, 0.78); /* Glass Satin Velvet with Imperial Glow */
+  --bg-card-hover: rgba(54, 22, 102, 0.88);
   --bg-glass: rgba(255, 255, 255, 0.05);
   --bg-glass-hover: rgba(255, 255, 255, 0.09);
 
-  --border-primary: rgba(16, 185, 129, 0.35); /* Vivid Emerald Glow Outline */
-  --border-secondary: rgba(251, 191, 36, 0.35); /* Liquid Gold Glow Outline */
-  --border-accent: rgba(251, 191, 36, 0.65); /* Electric Gold Glow */
+  --border-primary: rgba(168, 85, 247, 0.35); /* Royal Violet Glow Outline */
+  --border-secondary: rgba(234, 179, 8, 0.35); /* Champagne Gold Outline */
+  --border-accent: rgba(234, 179, 8, 0.65); /* Electric Gold Glow */
 
-  --text-primary: #f0fdf4; /* Luminous Emerald White */
-  --text-secondary: #a7f3d0; /* Mint Pearl Silver */
-  --text-tertiary: #6ee7b7; /* Soft Jade Platinum */
-  --text-accent: #fbbf24; /* Liquid Neon Gold Highlight */
+  --text-primary: #faf5ff; /* Luminous Royal White */
+  --text-secondary: #e9d5ff; /* Soft Lavender Gold */
+  --text-tertiary: #c084fc; /* Amethyst Platinum */
+  --text-accent: #fbbf24; /* Champagne Imperial Gold Highlight */
   --text-link: #fef08a; /* Electric Gold Link */
 
-  --accent-primary: #10b981; /* Hero Accent: Vivid Emerald Green (#10B981) */
-  --accent-primary-hover: #059669;
-  --accent-gradient: linear-gradient(135deg, #059669 0%, #10b981 40%, #06b6d4 70%, #fbbf24 100%); /* Deep Emerald → Electric Cyan → Liquid Gold Shimmer */
-  --accent-gradient-soft: linear-gradient(135deg, rgba(16, 185, 129, 0.35) 0%, rgba(251, 191, 36, 0.25) 100%);
+  --accent-primary: #9333ea; /* Hero Accent: Royal Majesty Purple (#9333EA) */
+  --accent-primary-hover: #a855f7;
+  --accent-gradient: linear-gradient(135deg, #7e22ce 0%, #a855f7 35%, #eab308 80%, #fef08a 100%); /* Royal Velvet → Bright Majesty Amethyst → Champagne Gold */
+  --accent-gradient-soft: linear-gradient(135deg, rgba(168, 85, 247, 0.35) 0%, rgba(234, 179, 8, 0.25) 100%);
 
   --success: #34d399;
   --warning: #fbbf24;
   --danger: #f43f5e;
   --info: #38bdf8;
 
-  --avatar-gradient: linear-gradient(135deg, #059669 0%, #06b6d4 50%, #fbbf24 100%);
+  --avatar-gradient: linear-gradient(135deg, #7e22ce 0%, #a855f7 50%, #fbbf24 100%);
 
-  /* High Intensity Aurora Glows */
+  /* High Intensity Imperial Glows */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 18px rgba(16, 185, 129, 0.35);
-  --shadow-lg: 0 8px 36px rgba(2, 11, 13, 0.9), 0 0 25px rgba(16, 185, 129, 0.4);
-  --shadow-glow: 0 0 35px rgba(16, 185, 129, 0.5), 0 0 20px rgba(251, 191, 36, 0.35); /* Dual Emerald & Liquid Gold Glow */
-  --shadow-card: 0 4px 28px rgba(2, 11, 13, 0.6), inset 0 1px 0 rgba(167, 243, 208, 0.2);
+  --shadow-md: 0 4px 18px rgba(168, 85, 247, 0.35);
+  --shadow-lg: 0 8px 36px rgba(11, 5, 22, 0.9), 0 0 25px rgba(168, 85, 247, 0.4);
+  --shadow-glow: 0 0 35px rgba(168, 85, 247, 0.5), 0 0 22px rgba(234, 179, 8, 0.35); /* Royal Violet & Champagne Gold Glow */
+  --shadow-card: 0 4px 28px rgba(11, 5, 22, 0.6), inset 0 1px 0 rgba(233, 213, 255, 0.2);
 
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -103,11 +103,11 @@ body {
   color: var(--text-primary);
   background-color: var(--bg-primary);
   background-image: 
-    radial-gradient(rgba(167, 243, 208, 0.12) 1.5px, transparent 1.5px),
-    radial-gradient(circle at 10% 15%, rgba(16, 185, 129, 0.35) 0%, transparent 50%),
-    radial-gradient(circle at 90% 85%, rgba(251, 191, 36, 0.22) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.18) 0%, transparent 75%),
-    radial-gradient(circle at 80% 20%, rgba(124, 58, 237, 0.2) 0%, transparent 50%);
+    radial-gradient(rgba(233, 213, 255, 0.12) 1.5px, transparent 1.5px),
+    radial-gradient(circle at 10% 15%, rgba(168, 85, 247, 0.38) 0%, transparent 50%),
+    radial-gradient(circle at 90% 85%, rgba(234, 179, 8, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.15) 0%, transparent 75%),
+    radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.2) 0%, transparent 50%);
   background-size: 32px 32px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
@@ -122,7 +122,7 @@ body::before {
   right: -200px;
   width: 750px;
   height: 750px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, rgba(251, 191, 36, 0.12) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.25) 0%, rgba(234, 179, 8, 0.14) 40%, transparent 70%);
   pointer-events: none;
   z-index: 0;
   filter: blur(40px);
@@ -135,7 +135,7 @@ body::after {
   left: -100px;
   width: 650px;
   height: 650px;
-  background: radial-gradient(circle, rgba(251, 191, 36, 0.18) 0%, rgba(6, 182, 212, 0.14) 50%, transparent 70%);
+  background: radial-gradient(circle, rgba(234, 179, 8, 0.2) 0%, rgba(168, 85, 247, 0.15) 50%, transparent 70%);
   pointer-events: none;
   z-index: 0;
   filter: blur(40px);
