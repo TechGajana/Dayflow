@@ -17,14 +17,14 @@ async function main() {
   await prisma.skill.deleteMany();
   await prisma.user.deleteMany();
 
-  const hashedPassword = await bcrypt.hash("secret123", 10);
+  const hashedPassword = await bcrypt.hash("1234567890", 10);
 
   // 1. Create HR Officer
   const hrUser = await prisma.user.create({
     data: {
       employeeId: "EMP100",
-      name: "David Kim",
-      email: "david.kim@dayflow.io",
+      name: "Krishna Manager",
+      email: "kms.krishna2005@gmail.com",
       password: hashedPassword,
       role: "HR",
       mobile: "+1 (555) 123-4567",
@@ -53,8 +53,8 @@ async function main() {
   const employeeUser = await prisma.user.create({
     data: {
       employeeId: "EMP101",
-      name: "Alexandra Chen",
-      email: "alexandra.chen@dayflow.io",
+      name: "Hershini Staff",
+      email: "nhershini65@gmail.com",
       password: hashedPassword,
       role: "EMPLOYEE",
       mobile: "+1 (555) 234-5678",
