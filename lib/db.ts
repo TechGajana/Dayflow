@@ -24,30 +24,19 @@ CREATE INDEX IF NOT EXISTS idx_attendance_user_date ON attendance(user_id,date);
 CREATE INDEX IF NOT EXISTS idx_leave_status ON leave_requests(status);
 `)
 
-const company = db.prepare('SELECT id FROM companies WHERE slug = ?').get('dayflow-demo') as { id: string } | undefined
-if (!company) {
-  const companyId = 'company-dayflow'
-  db.prepare('INSERT INTO companies (id,name,slug) VALUES (?,?,?)').run(companyId, 'Northstar Labs', 'dayflow-demo')
-  const employees = [
-    ['u1','DF-001','Alex Morgan','admin@dayflow.com','admin','Operations','Head of People',8200],
-    ['u2','DF-002','Priya Shah','priya@dayflow.com','hr','People','HR Business Partner',5400],
-    ['u3','DF-003','Jordan Lee','jordan@dayflow.com','employee','Engineering','Product Designer',6200],
-    ['u4','DF-004','Maya Wilson','maya@dayflow.com','employee','Marketing','Marketing Lead',5800],
-    ['u5','DF-005','Noah Williams','noah@dayflow.com','manager','Engineering','Engineering Manager',7600],
-    ['u6','DF-006','Sofia Chen','sofia@dayflow.com','employee','Finance','Financial Analyst',5100],
-  ]
-  const insertUser = db.prepare('INSERT INTO users (id,company_id,employee_id,name,email,password_hash,role) VALUES (?,?,?,?,?,?,?)')
-  const insertProfile = db.prepare('INSERT INTO profiles (user_id,phone,designation,department,joining_date) VALUES (?,?,?,?,?)')
-  const insertSalary = db.prepare('INSERT INTO salaries (user_id,basic,hra,allowances,deductions,net_pay) VALUES (?,?,?,?,?,?)')
-  for (const [id, employeeId, name, email, role, department, designation, salary] of employees) {
-    insertUser.run(id, companyId, employeeId, name, email, 'demo-password-hash', role)
-    insertProfile.run(id, '+1 415 555 0100', designation, department, '2023-03-15')
-    insertSalary.run(id, Math.round(Number(salary)*0.7), Math.round(Number(salary)*0.2), Math.round(Number(salary)*0.1), 350, Number(salary)-350)
-  }
-  const today = new Date().toISOString().slice(0,10)
-  for (const id of ['u1','u2','u3','u4','u5']) db.prepare('INSERT INTO attendance (user_id,date,check_in,status) VALUES (?,?,?,?)').run(id,today,'08:5'+(Number(id.slice(1))+1),'present')
-  db.prepare('INSERT INTO leave_requests (user_id,leave_type,start_date,end_date,remarks,status) VALUES (?,?,?,?,?,?)').run('u3','Paid','2026-08-25','2026-08-27','Family event','pending')
-  db.prepare('INSERT INTO leave_requests (user_id,leave_type,start_date,end_date,remarks,status) VALUES (?,?,?,?,?,?)').run('u4','Sick','2026-08-19','2026-08-20','Not feeling well','approved')
+const demoCompany = db.prepare("SELECT id FROM companies WHERE slug='dayflow-demo'").get() as { id: string } | undefined
+if (demoCompany) {
+	db.transaction(() => {
+		db.prepare('DELETE FROM attendance WHERE user_id IN (SELECT id FROM users WHERE company_id=?)').run(demoCompany.id)
+		db.prepare('DELETE FROM leave_requests WHERE user_id IN (SELECT id FROM users WHERE company_id=?)').run(demoCompany.id)
+		db.prepare('DELETE FROM notifications WHERE user_id IN (SELECT id FROM users WHERE company_id=?)').run(demoCompany.id)
+		db.prepare('DELETE FROM audit_logs WHERE company_id=?').run(demoCompany.id)
+		db.prepare('DELETE FROM verification_tokens WHERE user_id IN (SELECT id FROM users WHERE company_id=?)').run(demoCompany.id)
+		db.prepare('DELETE FROM salaries WHERE user_id IN (SELECT id FROM users WHERE company_id=?)').run(demoCompany.id)
+		db.prepare('DELETE FROM profiles WHERE user_id IN (SELECT id FROM users WHERE company_id=?)').run(demoCompany.id)
+		db.prepare('DELETE FROM users WHERE company_id=?').run(demoCompany.id)
+		db.prepare('DELETE FROM companies WHERE id=?').run(demoCompany.id)
+	})()
 }
 
 export default db
