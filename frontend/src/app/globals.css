@@ -5,45 +5,45 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* ---- Design Tokens — Pure Metallic Burgundy & Pearl Silver Palette ---- */
+/* ---- Design Tokens — Cosmic Obsidian & Neon Nebula Palette ---- */
 :root {
   /* Colors */
-  --bg-primary: #18040a; /* Deep Pure Metallic Burgundy Black */
-  --bg-secondary: #280712; /* Dark Cabernet Burgundy Header */
-  --bg-tertiary: #380919; /* Satin Burgundy Container */
-  --bg-card: rgba(45, 9, 21, 0.8); /* Glass Satin Burgundy */
-  --bg-card-hover: rgba(64, 12, 30, 0.9);
-  --bg-glass: rgba(248, 250, 252, 0.05);
-  --bg-glass-hover: rgba(248, 250, 252, 0.1);
+  --bg-primary: #080914; /* Deep Velvet Cosmic Black */
+  --bg-secondary: #101226; /* Dark Nebula Navy Header */
+  --bg-tertiary: #181b3a; /* Satin Cosmic Navy Container */
+  --bg-card: rgba(24, 27, 58, 0.78); /* Glass Satin Cosmic Navy with Nebula Blur */
+  --bg-card-hover: rgba(36, 40, 85, 0.88);
+  --bg-glass: rgba(255, 255, 255, 0.05);
+  --bg-glass-hover: rgba(255, 255, 255, 0.09);
 
-  --border-primary: rgba(226, 232, 240, 0.18); /* Pure Pearl Silver Outline */
-  --border-secondary: rgba(225, 29, 72, 0.35); /* Metallic Burgundy Outline */
-  --border-accent: rgba(244, 63, 94, 0.5); /* Metallic Burgundy Glow */
+  --border-primary: rgba(139, 92, 246, 0.35); /* Neon Violet Glow Outline */
+  --border-secondary: rgba(251, 191, 36, 0.35); /* Electric Amber Glow Outline */
+  --border-accent: rgba(251, 191, 36, 0.65); /* Electric Gold Glow */
 
-  --text-primary: #f8fafc; /* Pure Crisp Pearl White */
-  --text-secondary: #e2e8f0; /* Pure Pearl Silver */
-  --text-tertiary: #cbd5e1; /* Muted Pearl Platinum */
-  --text-accent: #f43f5e; /* Metallic Burgundy Rose Highlight */
-  --text-link: #fda4af; /* Pearl Rose Link */
+  --text-primary: #f8fafc; /* Crisp Luminous Cosmic White */
+  --text-secondary: #c7d2fe; /* Soft Lavender Silver */
+  --text-tertiary: #a5b4fc; /* Amethyst Platinum */
+  --text-accent: #fbbf24; /* Electric Amber Gold Highlight */
+  --text-link: #fef08a; /* Electric Gold Link */
 
-  --accent-primary: #be123c; /* Pure Metallic Burgundy */
-  --accent-primary-hover: #e11d48;
-  --accent-gradient: linear-gradient(135deg, #881337 0%, #be123c 50%, #e2e8f0 100%); /* Deep Burgundy → Rich Metallic Burgundy → Pearl Silver Shimmer */
-  --accent-gradient-soft: linear-gradient(135deg, rgba(136, 19, 55, 0.35) 0%, rgba(226, 232, 240, 0.18) 100%);
+  --accent-primary: #8b5cf6; /* Hero Accent: Neon Nebula Violet (#8B5CF6) */
+  --accent-primary-hover: #a855f7;
+  --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #a855f7 35%, #06b6d4 70%, #fbbf24 100%); /* Deep Violet → Neon Purple → Cosmic Cyan → Amber Gold Shimmer */
+  --accent-gradient-soft: linear-gradient(135deg, rgba(139, 92, 246, 0.35) 0%, rgba(251, 191, 36, 0.25) 100%);
 
   --success: #34d399;
   --warning: #fbbf24;
   --danger: #f43f5e;
   --info: #38bdf8;
 
-  --avatar-gradient: linear-gradient(135deg, #881337 0%, #be123c 50%, #e2e8f0 100%);
+  --avatar-gradient: linear-gradient(135deg, #7c3aed 0%, #06b6d4 50%, #fbbf24 100%);
 
-  /* High Intensity Metallic Burgundy & Pearl Silver Shadows */
+  /* High Intensity Cosmic Nebula Shadows & Glows */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 18px rgba(190, 18, 60, 0.35);
-  --shadow-lg: 0 8px 36px rgba(24, 4, 10, 0.9), 0 0 25px rgba(190, 18, 60, 0.4);
-  --shadow-glow: 0 0 30px rgba(190, 18, 60, 0.45), 0 0 15px rgba(226, 232, 240, 0.2); /* Pure Metallic Burgundy & Pearl Silver Shimmer Glow */
-  --shadow-card: 0 4px 28px rgba(24, 4, 10, 0.6), inset 0 1px 0 rgba(248, 250, 252, 0.15);
+  --shadow-md: 0 4px 18px rgba(139, 92, 246, 0.35);
+  --shadow-lg: 0 8px 36px rgba(8, 9, 20, 0.9), 0 0 25px rgba(139, 92, 246, 0.4);
+  --shadow-glow: 0 0 35px rgba(139, 92, 246, 0.5), 0 0 20px rgba(251, 191, 36, 0.35); /* Multi-color Neon Nebula & Gold Glow */
+  --shadow-card: 0 4px 28px rgba(8, 9, 20, 0.6), inset 0 1px 0 rgba(199, 210, 254, 0.2);
 
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -103,17 +103,18 @@ body {
   color: var(--text-primary);
   background-color: var(--bg-primary);
   background-image: 
-    radial-gradient(rgba(226, 232, 240, 0.1) 1.5px, transparent 1.5px),
-    radial-gradient(circle at 20% 20%, rgba(136, 19, 55, 0.4) 0%, transparent 60%),
-    radial-gradient(circle at 80% 80%, rgba(190, 18, 60, 0.3) 0%, transparent 60%),
-    radial-gradient(circle at 50% 50%, rgba(226, 232, 240, 0.06) 0%, transparent 70%);
-  background-size: 32px 32px, 100% 100%, 100% 100%, 100% 100%;
+    radial-gradient(rgba(199, 210, 254, 0.12) 1.5px, transparent 1.5px),
+    radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.35) 0%, transparent 55%),
+    radial-gradient(circle at 85% 85%, rgba(251, 191, 36, 0.22) 0%, transparent 55%),
+    radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.18) 0%, transparent 70%),
+    radial-gradient(circle at 80% 15%, rgba(236, 72, 153, 0.2) 0%, transparent 50%);
+  background-size: 32px 32px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Background ambient metallic burgundy & pearl lights */
+/* Background ambient nebula lights */
 body::before {
   content: '';
   position: fixed;
@@ -121,10 +122,10 @@ body::before {
   right: -200px;
   width: 750px;
   height: 750px;
-  background: radial-gradient(circle, rgba(190, 18, 60, 0.25) 0%, rgba(226, 232, 240, 0.08) 50%, transparent 70%);
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, rgba(251, 191, 36, 0.12) 40%, transparent 70%);
   pointer-events: none;
   z-index: 0;
-  filter: blur(40px);
+  filter: blur(45px);
 }
 
 body::after {
@@ -134,10 +135,10 @@ body::after {
   left: -100px;
   width: 650px;
   height: 650px;
-  background: radial-gradient(circle, rgba(136, 19, 55, 0.25) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.18) 0%, rgba(6, 182, 212, 0.15) 50%, transparent 70%);
   pointer-events: none;
   z-index: 0;
-  filter: blur(40px);
+  filter: blur(45px);
 }
 
 a {
