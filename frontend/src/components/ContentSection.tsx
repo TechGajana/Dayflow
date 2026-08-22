@@ -39,9 +39,8 @@ export default function ContentSection({
     router.refresh();
   };
 
-  const isHr = viewer?.role === "HR";
   const isSelf = viewer?.id === userId;
-  const canEdit = isHr || isSelf;
+  const canEdit = isSelf;
 
   return (
     <>

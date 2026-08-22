@@ -55,9 +55,8 @@ export default function CertificationCard({
     return new Date(dateStr) < new Date();
   };
 
-  const isHr = viewer?.role === "HR";
   const isSelf = viewer?.id === userId;
-  const canEdit = isHr || isSelf;
+  const canEdit = isSelf;
 
   return (
     <>

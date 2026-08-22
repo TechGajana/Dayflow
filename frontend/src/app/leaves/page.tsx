@@ -49,43 +49,70 @@ function CalendarYearGrid({ leaves }: { leaves: LeaveRequest[] }) {
         }
 
         return (
-          <div key={m} className="glass-card" style={{ padding: "var(--space-4)" }}>
-            <h4 style={{ textAlign: "center", margin: "0 0 var(--space-3) 0", fontSize: "var(--font-sm)" }}>{m}</h4>
+          <div key={m} className="glass-card" style={{ padding: "var(--space-4)", background: "rgba(15, 23, 42, 0.65)", border: "1px solid rgba(255, 255, 255, 0.1)" }}>
             
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px", textAlign: "center", fontSize: "10px" }}>
+            {/* High-Contrast Clear Month Banner Header */}
+            <div
+              style={{
+                textAlign: "center",
+                background: "linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%)",
+                border: "1px solid rgba(99, 102, 241, 0.3)",
+                borderRadius: "var(--radius-sm)",
+                padding: "6px 0",
+                marginBottom: "var(--space-3)"
+              }}
+            >
+              <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 800, color: "#ffffff", letterSpacing: "0.5px", textTransform: "uppercase" }}>
+                {m} {year}
+              </h4>
+            </div>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px", textAlign: "center", fontSize: "11px" }}>
               {dayLabels.map((lbl, idx) => (
-                <div key={idx} style={{ color: "var(--text-tertiary)", fontWeight: 700 }}>{lbl}</div>
+                <div key={idx} style={{ color: "#cbd5e1", fontWeight: 800, paddingBottom: "4px" }}>{lbl}</div>
               ))}
               
               {daysArray.map((day, dayIdx) => {
                 if (!day) return <div key={`empty-${dayIdx}`} />;
                 const status = getDateStatus(day);
 
-                let bg = "none";
-                let color = "var(--text-primary)";
+                let bg = "rgba(255, 255, 255, 0.05)";
+                let color = "#f8fafc";
+                let border = "1px solid rgba(255, 255, 255, 0.08)";
+                let shadow = "none";
+
                 if (status === "APPROVED") {
-                  bg = "var(--danger)"; // Red
-                  color = "white";
+                  bg = "#10b981"; // Bright Emerald
+                  color = "#ffffff";
+                  border = "1px solid #059669";
+                  shadow = "0 0 8px rgba(16, 185, 129, 0.5)";
                 } else if (status === "PENDING") {
-                  bg = "var(--warning)"; // Orange
-                  color = "white";
+                  bg = "#f59e0b"; // Vibrant Amber
+                  color = "#0f172a";
+                  border = "1px solid #d97706";
+                  shadow = "0 0 8px rgba(245, 158, 11, 0.5)";
                 } else if (status === "REJECTED") {
-                  bg = "rgba(255, 255, 255, 0.08)"; // Grey
-                  color = "var(--text-secondary)";
+                  bg = "#ef4444"; // Crimson Red
+                  color = "#ffffff";
+                  border = "1px solid #dc2626";
+                  shadow = "0 0 8px rgba(239, 68, 68, 0.4)";
                 }
 
                 return (
                   <div
                     key={dayIdx}
                     style={{
-                      width: "22px",
-                      height: "22px",
+                      width: "24px",
+                      height: "24px",
                       lineHeight: "22px",
-                      borderRadius: "4px",
+                      borderRadius: "6px",
                       background: bg,
                       color: color,
+                      border: border,
+                      boxShadow: shadow,
                       margin: "0 auto",
-                      fontWeight: status ? "bold" : "normal"
+                      fontWeight: status ? 800 : 500,
+                      fontSize: "11px"
                     }}
                   >
                     {day.getDate()}
@@ -246,10 +273,15 @@ function LeavesContent() {
   const paidDaysAvailable = Math.max(0, 24 - paidDaysUsed);
   const sickDaysAvailable = Math.max(0, 7 - sickDaysUsed);
 
-  // Filter leave requests for search query & role permission
+  // Filter leave requests for search query & approval permissions
   const filteredLeaves = leaves.filter((l) => {
-    // HR can only see leave requests of regular employees
+    // 1. Cannot approve your own leaves in management registry (must be approved by Admin)
+    if (l.userId === currentUser.id) return false;
+
+    // 2. HR can only see and approve leave requests of regular employees
     if (currentUser.role === "HR" && l.user?.role !== "EMPLOYEE") return false;
+
+    // 3. Admin can approve leave requests of both HR and Employees
 
     if (!searchQuery) return true;
     return (

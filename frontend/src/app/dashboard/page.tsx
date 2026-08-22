@@ -54,7 +54,12 @@ export default function DashboardPage() {
       router.push("/login");
       return;
     }
-    setCurrentUser(JSON.parse(storedUser));
+    const sess = JSON.parse(storedUser);
+    if (sess.role === "EMPLOYEE") {
+      router.push(`/profile?id=${sess.id}`);
+      return;
+    }
+    setCurrentUser(sess);
     loadData();
 
     // Listen to checkin/checkout updates from header to refresh status dots

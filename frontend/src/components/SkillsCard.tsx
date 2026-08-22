@@ -68,9 +68,8 @@ export default function SkillsCard({ userId, skills }: SkillsCardProps) {
     return colors[level] || "var(--border-primary)";
   };
 
-  const isHr = viewer?.role === "HR";
   const isSelf = viewer?.id === userId;
-  const canEdit = isHr || isSelf;
+  const canEdit = isSelf;
 
   return (
     <div className="glass-card animate-in animate-in-delay-2" id="skills-card">

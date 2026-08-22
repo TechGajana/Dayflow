@@ -60,6 +60,10 @@ function ProfileContent() {
       const sess = JSON.parse(storedUser);
       setCurrentUser(sess);
       const profileId = targetId || sess.id;
+      if (sess.role === "EMPLOYEE" && profileId !== sess.id) {
+        router.push(`/profile?id=${sess.id}`);
+        return;
+      }
       const data = await fetchProfile(profileId);
       if (!data) {
         setError("User profile not found");
@@ -208,6 +212,7 @@ function ProfileContent() {
   const professionalTax = 200.00;
 
   const isHr = currentUser.role === "HR";
+  const isAdmin = currentUser.role === "ADMIN";
   const isSelf = currentUser.id === user.id;
 
   return (
@@ -335,23 +340,23 @@ function ProfileContent() {
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
                       <div className="form-group">
                         <label className="form-label">Date of Birth</label>
-                        <input type="date" className="form-input" value={dob} onChange={(e) => setDob(e.target.value)} />
+                        <input type="date" className="form-input" value={dob} onChange={(e) => setDob(e.target.value)} disabled={!isSelf} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Nationality</label>
-                        <input type="text" className="form-input" value={nationality} onChange={(e) => setNationality(e.target.value)} placeholder="e.g. Indian" />
+                        <input type="text" className="form-input" value={nationality} onChange={(e) => setNationality(e.target.value)} placeholder="e.g. Indian" disabled={!isSelf} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Personal Email</label>
-                        <input type="email" className="form-input" value={personalEmail} onChange={(e) => setPersonalEmail(e.target.value)} placeholder="e.g. name@personal.com" />
+                        <input type="email" className="form-input" value={personalEmail} onChange={(e) => setPersonalEmail(e.target.value)} placeholder="e.g. name@personal.com" disabled={!isSelf} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Residing Address</label>
-                        <input type="text" className="form-input" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="e.g. 123 Main St" />
+                        <input type="text" className="form-input" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="e.g. 123 Main St" disabled={!isSelf} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Gender</label>
-                        <select className="form-input" value={gender} onChange={(e) => setGender(e.target.value)}>
+                        <select className="form-input" value={gender} onChange={(e) => setGender(e.target.value)} disabled={!isSelf}>
                           <option value="">Select Gender</option>
                           <option value="Male">Male</option>
                           <option value="Female">Female</option>
@@ -360,7 +365,7 @@ function ProfileContent() {
                       </div>
                       <div className="form-group">
                         <label className="form-label">Marital Status</label>
-                        <select className="form-input" value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)}>
+                        <select className="form-input" value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)} disabled={!isSelf}>
                           <option value="">Select Status</option>
                           <option value="Single">Single</option>
                           <option value="Married">Married</option>
@@ -373,7 +378,7 @@ function ProfileContent() {
                       </div>
                       <div className="form-group">
                         <label className="form-label">Employee Code / ID</label>
-                        <input type="text" className="form-input" value={empCode} onChange={(e) => setEmpCode(e.target.value)} placeholder="e.g. OIJODO20220001" />
+                        <input type="text" className="form-input" value={empCode} onChange={(e) => setEmpCode(e.target.value)} placeholder="e.g. OIJODO20220001" disabled={!isSelf} />
                       </div>
                     </div>
 
@@ -381,34 +386,36 @@ function ProfileContent() {
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
                       <div className="form-group">
                         <label className="form-label">Bank Name</label>
-                        <input type="text" className="form-input" value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Wells Fargo" />
+                        <input type="text" className="form-input" value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Wells Fargo" disabled={!isSelf} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Account Number</label>
-                        <input type="text" className="form-input" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="987654321" />
+                        <input type="text" className="form-input" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="987654321" disabled={!isSelf} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">IFSC Code</label>
-                        <input type="text" className="form-input" value={ifscCode} onChange={(e) => setIfscCode(e.target.value)} placeholder="WFGO0004567" />
+                        <input type="text" className="form-input" value={ifscCode} onChange={(e) => setIfscCode(e.target.value)} placeholder="WFGO0004567" disabled={!isSelf} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">PAN Number</label>
-                        <input type="text" className="form-input" value={panNo} onChange={(e) => setPanNo(e.target.value)} placeholder="XYZWR9876K" />
+                        <input type="text" className="form-input" value={panNo} onChange={(e) => setPanNo(e.target.value)} placeholder="XYZWR9876K" disabled={!isSelf} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">UAN Number</label>
-                        <input type="text" className="form-input" value={uanNo} onChange={(e) => setUanNo(e.target.value)} placeholder="200987654321" />
+                        <input type="text" className="form-input" value={uanNo} onChange={(e) => setUanNo(e.target.value)} placeholder="200987654321" disabled={!isSelf} />
                       </div>
                     </div>
 
-                    <button type="submit" className="btn-primary" style={{ alignSelf: "flex-end", marginTop: "var(--space-4)" }} disabled={isSavingPrivate}>
-                      {isSavingPrivate ? "Saving..." : "Save Private Info"}
-                    </button>
+                    {isSelf && (
+                      <button type="submit" className="btn-primary" style={{ alignSelf: "flex-end", marginTop: "var(--space-4)" }} disabled={isSavingPrivate}>
+                        {isSavingPrivate ? "Saving..." : "Save Private Info"}
+                      </button>
+                    )}
                   </form>
                 )}
 
-                {/* 3. SALARY INFO TAB (HR ONLY) */}
-                {activeTab === "salary" && isHr && (
+                {/* 3. SALARY INFO TAB */}
+                {activeTab === "salary" && (isHr || isAdmin || isSelf) && (
                   <form onSubmit={handleSaveSalary} style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
                       <div className="form-group">
@@ -419,6 +426,7 @@ function ProfileContent() {
                           value={monthWage}
                           onChange={(e) => setMonthWage(parseFloat(e.target.value) || 0)}
                           id="month-wage-input"
+                          disabled={!isSelf}
                         />
                       </div>
                       <div className="form-group">
@@ -427,15 +435,15 @@ function ProfileContent() {
                       </div>
                       <div className="form-group">
                         <label className="form-label">No of working days in a week</label>
-                        <input type="number" className="form-input" value={workingDays} onChange={(e) => setWorkingDays(parseInt(e.target.value) || 5)} />
+                        <input type="number" className="form-input" value={workingDays} onChange={(e) => setWorkingDays(parseInt(e.target.value) || 5)} disabled={!isSelf} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Break Time (Hours)</label>
-                        <input type="number" step="0.1" className="form-input" value={breakTime} onChange={(e) => setBreakTime(parseFloat(e.target.value) || 1)} />
+                        <input type="number" step="0.1" className="form-input" value={breakTime} onChange={(e) => setBreakTime(parseFloat(e.target.value) || 1)} disabled={!isSelf} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Hrs per day</label>
-                        <input type="number" className="form-input" value={hrsPerDay} onChange={(e) => setHrsPerDay(parseFloat(e.target.value) || 8)} />
+                        <input type="number" className="form-input" value={hrsPerDay} onChange={(e) => setHrsPerDay(parseFloat(e.target.value) || 8)} disabled={!isSelf} />
                       </div>
                     </div>
 
@@ -484,9 +492,11 @@ function ProfileContent() {
                       </table>
                     </div>
 
-                    <button type="submit" className="btn-primary" style={{ alignSelf: "flex-end" }} disabled={isSavingSalary} id="salary-save-btn">
-                      {isSavingSalary ? "Saving..." : "Save Salary Config"}
-                    </button>
+                    {isSelf && (
+                      <button type="submit" className="btn-primary" style={{ alignSelf: "flex-end" }} disabled={isSavingSalary} id="salary-save-btn">
+                        {isSavingSalary ? "Saving..." : "Save Salary Config"}
+                      </button>
+                    )}
                   </form>
                 )}
 

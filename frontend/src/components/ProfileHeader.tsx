@@ -48,9 +48,9 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
     router.refresh();
   };
 
-  const isHr = viewer?.role === "HR";
+  const isHr = viewer?.role === "HR" || viewer?.role === "ADMIN";
   const isSelf = viewer?.id === user.id;
-  const canEdit = isHr || isSelf;
+  const canEdit = isSelf;
 
   const fields = [
     { label: "Email", key: "email", value: user.email, adminOnly: false },
@@ -68,7 +68,6 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
 
   // Filter which fields are editable during form popups
   const editableFields = fields
-    .filter((f) => !f.adminOnly || isHr)
     .map((f) => ({
       key: f.key,
       label: f.label,

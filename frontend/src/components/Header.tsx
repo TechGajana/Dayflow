@@ -89,7 +89,7 @@ export default function Header() {
       {/* Left: Logo & Company */}
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-6)" }}>
         <div
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push(user.role === "EMPLOYEE" ? `/profile?id=${user.id}` : "/dashboard")}
           style={{
             cursor: "pointer",
             fontWeight: 800,
@@ -106,19 +106,19 @@ export default function Header() {
         {/* Navigation Tabs */}
         <nav style={{ display: "flex", gap: "var(--space-2)" }}>
           <button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push(user.role === "EMPLOYEE" ? `/profile?id=${user.id}` : "/dashboard")}
             style={{
               padding: "var(--space-2) var(--space-4)",
-              background: pathname === "/dashboard" ? "var(--bg-glass-hover)" : "none",
+              background: (pathname === "/dashboard" || (pathname === "/profile" && user.role === "EMPLOYEE")) ? "var(--bg-glass-hover)" : "none",
               border: "none",
-              color: pathname === "/dashboard" ? "var(--text-accent)" : "var(--text-secondary)",
+              color: (pathname === "/dashboard" || (pathname === "/profile" && user.role === "EMPLOYEE")) ? "var(--text-accent)" : "var(--text-secondary)",
               borderRadius: "var(--radius-sm)",
-              fontWeight: pathname === "/dashboard" ? 600 : 500,
+              fontWeight: 600,
               cursor: "pointer",
               transition: "all 0.2s"
             }}
           >
-            Employees
+            {user.role === "EMPLOYEE" ? "My Profile" : "Employees"}
           </button>
           <button
             onClick={() => router.push(`/attendance?id=${user.id}`)}
