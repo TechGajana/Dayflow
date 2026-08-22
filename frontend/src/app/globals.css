@@ -5,45 +5,45 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* ---- Design Tokens ---- */
+/* ---- Design Tokens — Metallic Burgundy & Pearl Silver Palette ---- */
 :root {
   /* Colors */
-  --bg-primary: #0b0d17;
-  --bg-secondary: #111427;
-  --bg-tertiary: #161a30;
-  --bg-card: rgba(22, 26, 48, 0.7);
-  --bg-card-hover: rgba(30, 35, 60, 0.8);
-  --bg-glass: rgba(255, 255, 255, 0.03);
-  --bg-glass-hover: rgba(255, 255, 255, 0.06);
+  --bg-primary: #120509; /* Deep Metallic Burgundy Black */
+  --bg-secondary: #1e0910; /* Dark Cabernet Burgundy */
+  --bg-tertiary: #2a0c16; /* Satin Wine Container */
+  --bg-card: rgba(42, 12, 22, 0.75); /* Glass Metallic Burgundy */
+  --bg-card-hover: rgba(58, 16, 30, 0.85);
+  --bg-glass: rgba(245, 246, 248, 0.04);
+  --bg-glass-hover: rgba(245, 246, 248, 0.08);
 
-  --border-primary: rgba(255, 255, 255, 0.06);
-  --border-secondary: rgba(255, 255, 255, 0.1);
-  --border-accent: rgba(99, 102, 241, 0.3);
+  --border-primary: rgba(245, 246, 248, 0.12); /* Pearl Silver Shimmer Outline */
+  --border-secondary: rgba(245, 246, 248, 0.2);
+  --border-accent: rgba(225, 29, 72, 0.4); /* Metallic Burgundy Accent Glow */
 
-  --text-primary: #f1f3f9;
-  --text-secondary: #8b8fa7;
-  --text-tertiary: #5c6080;
-  --text-accent: #818cf8;
-  --text-link: #a5b4fc;
+  --text-primary: #f8fafc; /* Crisp Pearl White */
+  --text-secondary: #cbd5e1; /* Luminous Pearl Silver */
+  --text-tertiary: #8a8d9a; /* Muted Platinum */
+  --text-accent: #fb7185; /* Metallic Burgundy Rose Highlight */
+  --text-link: #fda4af; /* Pearl Silver Rose Link */
 
-  --accent-primary: #6366f1;
-  --accent-primary-hover: #818cf8;
-  --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
-  --accent-gradient-soft: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+  --accent-primary: #be123c; /* Rich Metallic Burgundy */
+  --accent-primary-hover: #e11d48;
+  --accent-gradient: linear-gradient(135deg, #881337 0%, #be123c 50%, #e2e8f0 100%); /* Metallic Burgundy to Pearl Silver Shimmer */
+  --accent-gradient-soft: linear-gradient(135deg, rgba(136, 19, 55, 0.3) 0%, rgba(226, 232, 240, 0.15) 100%);
 
   --success: #34d399;
   --warning: #fbbf24;
-  --danger: #f87171;
-  --info: #60a5fa;
+  --danger: #f43f5e;
+  --info: #38bdf8;
 
-  --avatar-gradient: linear-gradient(135deg, #f472b6 0%, #fb923c 50%, #fbbf24 100%);
+  --avatar-gradient: linear-gradient(135deg, #881337 0%, #be123c 50%, #cbd5e1 100%);
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.7);
+  --shadow-glow: 0 0 25px rgba(190, 18, 60, 0.35); /* Burgundy Glow */
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(245, 246, 248, 0.1);
 
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;

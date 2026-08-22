@@ -215,7 +215,7 @@ export default function DashboardPage() {
           cursor: "pointer",
           position: "relative",
           transition: "transform 0.2s, box-shadow 0.2s",
-          border: isEmpHr ? "1px solid rgba(168, 85, 247, 0.4)" : isEmpAdmin ? "1px solid rgba(234, 179, 8, 0.4)" : "1px solid var(--border-primary)"
+          border: isEmpHr ? "1px solid rgba(244, 63, 94, 0.4)" : isEmpAdmin ? "1px solid rgba(251, 191, 36, 0.4)" : "1px solid var(--border-primary)"
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = "translateY(-4px)";
@@ -234,9 +234,9 @@ export default function DashboardPage() {
               borderRadius: "12px",
               fontSize: "10px",
               fontWeight: 700,
-              background: isEmpAdmin ? "rgba(234, 179, 8, 0.2)" : isEmpHr ? "rgba(168, 85, 247, 0.2)" : "rgba(34, 197, 94, 0.2)",
-              color: isEmpAdmin ? "#eab308" : isEmpHr ? "#c084fc" : "#4ade80",
-              border: `1px solid ${isEmpAdmin ? "#eab308" : isEmpHr ? "#c084fc" : "#4ade80"}`
+              background: isEmpAdmin ? "rgba(251, 191, 36, 0.2)" : isEmpHr ? "rgba(244, 63, 94, 0.2)" : "rgba(226, 232, 240, 0.15)",
+              color: isEmpAdmin ? "#fbbf24" : isEmpHr ? "#f43f5e" : "#e2e8f0",
+              border: `1px solid ${isEmpAdmin ? "#fbbf24" : isEmpHr ? "#f43f5e" : "#e2e8f0"}`
             }}
           >
             {isEmpAdmin ? "ADMIN" : isEmpHr ? "HR MANAGER" : "STAFF"}
@@ -374,8 +374,8 @@ export default function DashboardPage() {
                 padding: "var(--space-2) var(--space-4)",
                 background: roleTab === "EMPLOYEE" ? "var(--bg-glass-hover)" : "none",
                 border: "none",
-                borderBottom: roleTab === "EMPLOYEE" ? "2px solid #4ade80" : "2px solid transparent",
-                color: roleTab === "EMPLOYEE" ? "#4ade80" : "var(--text-secondary)",
+                borderBottom: roleTab === "EMPLOYEE" ? "2px solid #e2e8f0" : "2px solid transparent",
+                color: roleTab === "EMPLOYEE" ? "#e2e8f0" : "var(--text-secondary)",
                 fontWeight: 600,
                 cursor: "pointer",
                 borderRadius: "var(--radius-sm)"
@@ -390,8 +390,8 @@ export default function DashboardPage() {
                 padding: "var(--space-2) var(--space-4)",
                 background: roleTab === "HR" ? "var(--bg-glass-hover)" : "none",
                 border: "none",
-                borderBottom: roleTab === "HR" ? "2px solid #c084fc" : "2px solid transparent",
-                color: roleTab === "HR" ? "#c084fc" : "var(--text-secondary)",
+                borderBottom: roleTab === "HR" ? "2px solid #f43f5e" : "2px solid transparent",
+                color: roleTab === "HR" ? "#f43f5e" : "var(--text-secondary)",
                 fontWeight: 600,
                 cursor: "pointer",
                 borderRadius: "var(--radius-sm)"
@@ -407,8 +407,8 @@ export default function DashboardPage() {
                   padding: "var(--space-2) var(--space-4)",
                   background: roleTab === "ADMIN" ? "var(--bg-glass-hover)" : "none",
                   border: "none",
-                  borderBottom: roleTab === "ADMIN" ? "2px solid #eab308" : "2px solid transparent",
-                  color: roleTab === "ADMIN" ? "#eab308" : "var(--text-secondary)",
+                  borderBottom: roleTab === "ADMIN" ? "2px solid #fbbf24" : "2px solid transparent",
+                  color: roleTab === "ADMIN" ? "#fbbf24" : "var(--text-secondary)",
                   fontWeight: 600,
                   cursor: "pointer",
                   borderRadius: "var(--radius-sm)"
@@ -471,7 +471,7 @@ export default function DashboardPage() {
             {/* HR Managers Section */}
             {hrMembers.length > 0 && (
               <div>
-                <h3 style={{ color: "#c084fc", margin: "0 0 var(--space-4) 0", display: "flex", alignItems: "center", gap: "8px" }}>
+                <h3 style={{ color: "#f43f5e", margin: "0 0 var(--space-4) 0", display: "flex", alignItems: "center", gap: "8px" }}>
                   👑 HR Officers & Managers ({hrMembers.length})
                 </h3>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "var(--space-6)" }}>
@@ -483,7 +483,7 @@ export default function DashboardPage() {
             {/* Staff Members Section */}
             {staffMembers.length > 0 && (
               <div>
-                <h3 style={{ color: "#4ade80", margin: "0 0 var(--space-4) 0", display: "flex", alignItems: "center", gap: "8px" }}>
+                <h3 style={{ color: "#e2e8f0", margin: "0 0 var(--space-4) 0", display: "flex", alignItems: "center", gap: "8px" }}>
                   👤 Staff Members ({staffMembers.length})
                 </h3>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "var(--space-6)" }}>
