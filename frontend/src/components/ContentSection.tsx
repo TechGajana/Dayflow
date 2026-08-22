@@ -12,6 +12,7 @@ interface ContentSectionProps {
   content: string | null;
   fieldKey: "about" | "jobLove" | "hobbies";
   animationDelay?: number;
+  onUpdate?: () => void;
 }
 
 export default function ContentSection({
@@ -21,6 +22,7 @@ export default function ContentSection({
   content,
   fieldKey,
   animationDelay = 0,
+  onUpdate,
 }: ContentSectionProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [viewer, setViewer] = useState<{ id: string; role: string } | null>(null);
@@ -36,11 +38,13 @@ export default function ContentSection({
   const handleSave = async (formData: Record<string, string>) => {
     await updateAboutSections(userId, { [fieldKey]: formData[fieldKey] });
     setIsEditing(false);
+    onUpdate?.();
     router.refresh();
   };
 
+  const isHr = viewer?.role === "HR" || viewer?.role === "ADMIN";
   const isSelf = viewer?.id === userId;
-  const canEdit = isSelf;
+  const canEdit = isSelf || isHr;
 
   return (
     <>

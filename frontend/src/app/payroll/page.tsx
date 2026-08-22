@@ -25,7 +25,8 @@ function PayrollContent() {
     const sess = JSON.parse(storedUser);
     setCurrentUser(sess);
 
-    const targetId = userId || sess.id;
+    // Staff role: strictly view own payroll details
+    const targetId = sess.role === "EMPLOYEE" ? sess.id : (userId || sess.id);
 
     const loadProfile = async () => {
       try {

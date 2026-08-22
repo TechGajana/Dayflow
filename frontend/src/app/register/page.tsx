@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { register } from "@/lib/api";
 
@@ -17,6 +17,9 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,11 +99,26 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
           {/* Company Name with Upload Logo */}
+          <input
+            type="file"
+            ref={logoInputRef}
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = () => setLogoPreview(reader.result as string);
+                reader.readAsDataURL(file);
+              }
+            }}
+          />
+
           <div className="form-group">
             <label className="form-label" htmlFor="company-input">
               Company Name
             </label>
-            <div style={{ display: "flex", gap: "var(--space-2)" }}>
+            <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
               <input
                 id="company-input"
                 type="text"
@@ -115,12 +133,30 @@ export default function RegisterPage() {
                 type="button"
                 className="btn-ghost"
                 title="Upload Company Logo"
-                style={{ width: "42px", height: "42px", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
-                onClick={() => alert("Mock Logo Upload: Image selected.")}
+                style={{
+                  width: "42px",
+                  height: "42px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 0,
+                  overflow: "hidden",
+                  border: logoPreview ? "1px solid var(--text-accent)" : "1px solid var(--border-primary)"
+                }}
+                onClick={() => logoInputRef.current?.click()}
               >
-                📤
+                {logoPreview ? (
+                  <img src={logoPreview} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  "📤"
+                )}
               </button>
             </div>
+            {logoPreview && (
+              <span style={{ fontSize: "10px", color: "var(--text-accent)", marginTop: "2px" }}>
+                ✓ Company logo uploaded
+              </span>
+            )}
           </div>
 
           <div className="form-group">

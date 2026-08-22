@@ -321,6 +321,7 @@ export async function createEmployee(data: {
   department?: string;
   title?: string;
   basicSalary?: number;
+  role?: string;
 }): Promise<{ employee: User; temporaryPassword?: string }> {
   const response = await fetch(`${API_BASE_URL}/profile/employee`, {
     method: "POST",

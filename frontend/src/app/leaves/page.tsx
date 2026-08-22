@@ -136,6 +136,7 @@ function LeavesContent() {
   const [profileUser, setProfileUser] = useState<User | null>(null);
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeHrTab, setActiveHrTab] = useState<"registry" | "myleaves">("registry");
 
   const getStatusStyle = (status: string) => {
     switch (status) {
@@ -166,10 +167,14 @@ function LeavesContent() {
       const sess = JSON.parse(storedUser);
 
       if (sess.role === "HR" || sess.role === "ADMIN") {
-        const leavesData = await fetchLeaves();
+        const [leavesData, prof] = await Promise.all([
+          fetchLeaves(),
+          fetchProfile(sess.id)
+        ]);
         setLeaves(leavesData);
+        setProfileUser(prof);
       } else {
-        const targetId = userId || sess.id;
+        const targetId = sess.id;
         const [leavesData, prof] = await Promise.all([
           fetchLeaves(targetId),
           fetchProfile(targetId)
@@ -214,10 +219,9 @@ function LeavesContent() {
   const handleApplyLeave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) return;
-    const targetId = userId || currentUser.id;
     try {
       await applyLeave({
-        userId: targetId,
+        userId: currentUser.id,
         leaveType,
         startDate,
         endDate,
@@ -262,10 +266,14 @@ function LeavesContent() {
   }
 
   const isHr = currentUser.role === "HR" || currentUser.role === "ADMIN";
+  const isAdmin = currentUser.role === "ADMIN";
+
+  // Filter user's own leaves for quota calculation & personal calendar
+  const myLeaves = leaves.filter((l) => l.userId === currentUser.id);
 
   // Calculate available days (Paid quota = 24 base, Sick quota = 7 base)
-  const approvedPaidLeaves = leaves.filter((l) => l.leaveType === "Paid Time off" && l.status === "APPROVED");
-  const approvedSickLeaves = leaves.filter((l) => l.leaveType === "Sick Leave" && l.status === "APPROVED");
+  const approvedPaidLeaves = myLeaves.filter((l) => l.leaveType === "Paid Time off" && l.status === "APPROVED");
+  const approvedSickLeaves = myLeaves.filter((l) => l.leaveType === "Sick Leave" && l.status === "APPROVED");
 
   const paidDaysUsed = approvedPaidLeaves.reduce((acc, l) => acc + getLeaveDaysDuration(l.startDate, l.endDate), 0);
   const sickDaysUsed = approvedSickLeaves.reduce((acc, l) => acc + getLeaveDaysDuration(l.startDate, l.endDate), 0);
@@ -273,15 +281,13 @@ function LeavesContent() {
   const paidDaysAvailable = Math.max(0, 24 - paidDaysUsed);
   const sickDaysAvailable = Math.max(0, 7 - sickDaysUsed);
 
-  // Filter leave requests for search query & approval permissions
-  const filteredLeaves = leaves.filter((l) => {
-    // 1. Cannot approve your own leaves in management registry (must be approved by Admin)
+  // Filter leave requests for search query & approval permissions (excluding own leaves from registry approval list)
+  const filteredRegistryLeaves = leaves.filter((l) => {
+    // 1. HR cannot approve their own leaves in employee registry
     if (l.userId === currentUser.id) return false;
 
     // 2. HR can only see and approve leave requests of regular employees
     if (currentUser.role === "HR" && l.user?.role !== "EMPLOYEE") return false;
-
-    // 3. Admin can approve leave requests of both HR and Employees
 
     if (!searchQuery) return true;
     return (
@@ -289,8 +295,6 @@ function LeavesContent() {
       l.leaveType.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
-
-  const pendingLeaves = filteredLeaves.filter((l) => l.status === "PENDING");
 
   const durationDays = getLeaveDaysDuration(startDate, endDate);
 
@@ -300,132 +304,259 @@ function LeavesContent() {
 
       <main style={{ padding: "0 var(--space-8) var(--space-8) var(--space-8)", maxWidth: "1400px", margin: "0 auto" }}>
         
-        {/* Quota Indicators */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "var(--space-6)", marginBottom: "var(--space-6)" }}>
-          <div className="glass-card" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "var(--space-4)" }}>
-            <span style={{ fontSize: "var(--font-xs)", color: "var(--text-tertiary)", textTransform: "uppercase" }}>Paid Time Off</span>
-            <h2 style={{ margin: "4px 0 0 0", color: "var(--text-accent)" }}>{paidDaysAvailable.toString().padStart(2, "0")} Days Available</h2>
+        {/* Top Page Header Bar with Apply Leave Button for HR & Staff */}
+        <header className="page-header animate-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-6)" }}>
+          <div>
+            <h1 style={{ margin: 0 }}>Time Off & Leave Management</h1>
+            <p style={{ color: "var(--text-secondary)", fontSize: "var(--font-sm)", marginTop: "4px" }}>
+              {isAdmin ? "System overview of employee leave requests" : isHr ? "Manage employee leave requests and apply for time off" : `Manage leaves for ${profileUser?.name || currentUser.name}`}
+            </p>
           </div>
-          <div className="glass-card" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "var(--space-4)" }}>
-            <span style={{ fontSize: "var(--font-xs)", color: "var(--text-tertiary)", textTransform: "uppercase" }}>Sick Time Off</span>
-            <h2 style={{ margin: "4px 0 0 0", color: "var(--warning)" }}>{sickDaysAvailable.toString().padStart(2, "0")} Days Available</h2>
+          {!isAdmin && (
+            <button
+              onClick={() => setIsApplying(true)}
+              className="btn-primary"
+              id="apply-leave-btn"
+            >
+              + Apply Leave Request
+            </button>
+          )}
+        </header>
+
+        {/* Quota Indicators - Hidden for Admin */}
+        {!isAdmin && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "var(--space-6)", marginBottom: "var(--space-6)" }}>
+            <div className="glass-card" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "var(--space-4)" }}>
+              <span style={{ fontSize: "var(--font-xs)", color: "var(--text-tertiary)", textTransform: "uppercase" }}>My Paid Time Off</span>
+              <h2 style={{ margin: "4px 0 0 0", color: "var(--text-accent)" }}>{paidDaysAvailable.toString().padStart(2, "0")} Days Available</h2>
+            </div>
+            <div className="glass-card" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "var(--space-4)" }}>
+              <span style={{ fontSize: "var(--font-xs)", color: "var(--text-tertiary)", textTransform: "uppercase" }}>My Sick Time Off</span>
+              <h2 style={{ margin: "4px 0 0 0", color: "var(--warning)" }}>{sickDaysAvailable.toString().padStart(2, "0")} Days Available</h2>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ========================================================
-           HR / ADMIN VIEW - APPROVAL TABLE & SEARCH
+           HR / ADMIN VIEW - TABS (REGISTRY VS MY LEAVES)
            ======================================================== */}
         {isHr ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
             
-            {/* HR controls bar */}
-            <div className="glass-card">
-              <div className="glass-card__body" style={{ display: "flex", gap: "var(--space-4)", alignItems: "center" }}>
-                <input
-                  type="text"
-                  placeholder="Search leave requests by employee or type..."
-                  className="form-input"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{ maxWidth: "480px" }}
-                  id="hr-leaves-search"
-                />
-                
-                <input
-                  type="text"
-                  placeholder="Add feedback comment for approval/rejection..."
-                  className="form-input"
-                  value={hrComment}
-                  onChange={(e) => setHrComment(e.target.value)}
-                  style={{ flex: 1 }}
-                  id="hr-leave-comment"
-                />
+            {/* HR Tabs (Hidden for Admin who only sees registry) */}
+            {!isAdmin && (
+              <div style={{ display: "flex", gap: "var(--space-4)", borderBottom: "1px solid var(--border-primary)", paddingBottom: "var(--space-2)" }}>
+                <button
+                  onClick={() => setActiveHrTab("registry")}
+                  style={{
+                    padding: "var(--space-2) var(--space-4)",
+                    background: activeHrTab === "registry" ? "var(--bg-glass-hover)" : "none",
+                    border: "none",
+                    borderBottom: activeHrTab === "registry" ? "2px solid var(--text-accent)" : "2px solid transparent",
+                    color: activeHrTab === "registry" ? "var(--text-accent)" : "var(--text-secondary)",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    borderRadius: "var(--radius-sm)"
+                  }}
+                  id="hr-tab-registry"
+                >
+                  Employee Requests Registry ({filteredRegistryLeaves.length})
+                </button>
+                <button
+                  onClick={() => setActiveHrTab("myleaves")}
+                  style={{
+                    padding: "var(--space-2) var(--space-4)",
+                    background: activeHrTab === "myleaves" ? "var(--bg-glass-hover)" : "none",
+                    border: "none",
+                    borderBottom: activeHrTab === "myleaves" ? "2px solid var(--text-accent)" : "2px solid transparent",
+                    color: activeHrTab === "myleaves" ? "var(--text-accent)" : "var(--text-secondary)",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    borderRadius: "var(--radius-sm)"
+                  }}
+                  id="hr-tab-myleaves"
+                >
+                  My Time-Off Requests ({myLeaves.length})
+                </button>
               </div>
-            </div>
+            )}
 
-            {/* Leaves Request Table */}
-            <div className="glass-card">
-              <div className="glass-card__header">
-                <h2>Time Off Logs Registry</h2>
-                <span style={{ fontSize: "var(--font-xs)", color: "var(--text-tertiary)" }}>
-                  {filteredLeaves.length} requests total
-                </span>
-              </div>
-
-              <div className="glass-card__body" style={{ padding: 0 }}>
-                {filteredLeaves.length > 0 ? (
-                  <div style={{ overflowX: "auto" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-                      <thead>
-                        <tr style={{ borderBottom: "1px solid var(--border-primary)", color: "var(--text-tertiary)", fontSize: "var(--font-xs)", textTransform: "uppercase" }}>
-                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Name</th>
-                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Start Date</th>
-                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>End Date</th>
-                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Time off Type</th>
-                          <th style={{ padding: "var(--space-4) var(--space-6)", textAlign: "center" }}>Status & Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredLeaves.map((request) => (
-                          <tr key={request.id} style={{ borderBottom: "1px solid var(--border-primary)" }} className="content-section">
-                            <td style={{ padding: "var(--space-4) var(--space-6)", fontWeight: 600 }}>{request.user?.name}</td>
-                            <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-secondary)" }}>
-                              {new Date(request.startDate).toLocaleDateString([], { timeZone: "UTC" })}
-                            </td>
-                            <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-secondary)" }}>
-                              {new Date(request.endDate).toLocaleDateString([], { timeZone: "UTC" })}
-                            </td>
-                            <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-primary)" }}>{request.leaveType}</td>
-                            <td style={{ padding: "var(--space-4) var(--space-6)", display: "flex", justifyContent: "center", gap: "var(--space-2)" }}>
-                              {request.status === "PENDING" ? (
-                                <>
-                                  <button
-                                    onClick={() => handleReject(request.id)}
-                                    style={{
-                                      background: "var(--danger)",
-                                      border: "none",
-                                      color: "white",
-                                      padding: "6px 12px",
-                                      borderRadius: "var(--radius-sm)",
-                                      cursor: "pointer",
-                                      fontWeight: 600,
-                                      fontSize: "11px"
-                                    }}
-                                  >
-                                    Reject
-                                  </button>
-                                  <button
-                                    onClick={() => handleApprove(request.id)}
-                                    style={{
-                                      background: "var(--success)",
-                                      border: "none",
-                                      color: "white",
-                                      padding: "6px 12px",
-                                      borderRadius: "var(--radius-sm)",
-                                      cursor: "pointer",
-                                      fontWeight: 600,
-                                      fontSize: "11px"
-                                    }}
-                                  >
-                                    Approve
-                                  </button>
-                                </>
-                              ) : (
-                                <span className="status-badge" style={getStatusStyle(request.status)}>
-                                  {request.status}
-                                </span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+            {(isAdmin || activeHrTab === "registry") ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
+                {/* HR controls bar */}
+                <div className="glass-card">
+                  <div className="glass-card__body" style={{ display: "flex", gap: "var(--space-4)", alignItems: "center" }}>
+                    <input
+                      type="text"
+                      placeholder="Search leave requests by employee or type..."
+                      className="form-input"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      style={{ maxWidth: "480px" }}
+                      id="hr-leaves-search"
+                    />
+                    
+                    <input
+                      type="text"
+                      placeholder="Add feedback comment for approval/rejection..."
+                      className="form-input"
+                      value={hrComment}
+                      onChange={(e) => setHrComment(e.target.value)}
+                      style={{ flex: 1 }}
+                      id="hr-leave-comment"
+                    />
                   </div>
-                ) : (
-                  <div className="empty-state">No leaves logged in registry.</div>
-                )}
+                </div>
+
+                {/* Leaves Request Table */}
+                <div className="glass-card">
+                  <div className="glass-card__header">
+                    <h2>Time Off Logs Registry</h2>
+                    <span style={{ fontSize: "var(--font-xs)", color: "var(--text-tertiary)" }}>
+                      {filteredRegistryLeaves.length} requests total
+                    </span>
+                  </div>
+
+                  <div className="glass-card__body" style={{ padding: 0 }}>
+                    {filteredRegistryLeaves.length > 0 ? (
+                      <div style={{ overflowX: "auto" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                          <thead>
+                            <tr style={{ borderBottom: "1px solid var(--border-primary)", color: "var(--text-tertiary)", fontSize: "var(--font-xs)", textTransform: "uppercase" }}>
+                              <th style={{ padding: "var(--space-4) var(--space-6)" }}>Name</th>
+                              <th style={{ padding: "var(--space-4) var(--space-6)" }}>Start Date</th>
+                              <th style={{ padding: "var(--space-4) var(--space-6)" }}>End Date</th>
+                              <th style={{ padding: "var(--space-4) var(--space-6)" }}>Time off Type</th>
+                              <th style={{ padding: "var(--space-4) var(--space-6)", textAlign: "center" }}>Status & Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredRegistryLeaves.map((request) => (
+                              <tr key={request.id} style={{ borderBottom: "1px solid var(--border-primary)" }} className="content-section">
+                                <td style={{ padding: "var(--space-4) var(--space-6)", fontWeight: 600 }}>{request.user?.name}</td>
+                                <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-secondary)" }}>
+                                  {new Date(request.startDate).toLocaleDateString([], { timeZone: "UTC" })}
+                                </td>
+                                <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-secondary)" }}>
+                                  {new Date(request.endDate).toLocaleDateString([], { timeZone: "UTC" })}
+                                </td>
+                                <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-primary)" }}>{request.leaveType}</td>
+                                <td style={{ padding: "var(--space-4) var(--space-6)", display: "flex", justifyContent: "center", gap: "var(--space-2)" }}>
+                                  {request.status === "PENDING" ? (
+                                    <>
+                                      <button
+                                        onClick={() => handleReject(request.id)}
+                                        style={{
+                                          background: "var(--danger)",
+                                          border: "none",
+                                          color: "white",
+                                          padding: "6px 12px",
+                                          borderRadius: "var(--radius-sm)",
+                                          cursor: "pointer",
+                                          fontWeight: 600,
+                                          fontSize: "11px"
+                                        }}
+                                      >
+                                        Reject
+                                      </button>
+                                      <button
+                                        onClick={() => handleApprove(request.id)}
+                                        style={{
+                                          background: "var(--success)",
+                                          border: "none",
+                                          color: "white",
+                                          padding: "6px 12px",
+                                          borderRadius: "var(--radius-sm)",
+                                          cursor: "pointer",
+                                          fontWeight: 600,
+                                          fontSize: "11px"
+                                        }}
+                                      >
+                                        Approve
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <span className="status-badge" style={getStatusStyle(request.status)}>
+                                      {request.status}
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="empty-state">No leaves logged in registry.</div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              /* HR Personal Leaves Tab */
+              <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-8)" }}>
+                {/* 12-Month Calendar Grid */}
+                <div className="glass-card animate-in" style={{ padding: "var(--space-6)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-4)" }}>
+                    <h2 style={{ margin: 0 }}>My Time-Off Leave Calendar</h2>
+                  </div>
+                  <CalendarYearGrid leaves={myLeaves} />
+                </div>
+
+                {/* HR Personal Requests Table */}
+                <div className="glass-card animate-in" id="hr-my-leaves-card">
+                  <div className="glass-card__header">
+                    <h2>My Applications Log</h2>
+                    <span style={{ fontSize: "var(--font-xs)", color: "var(--text-tertiary)" }}>
+                      {myLeaves.length} applications
+                    </span>
+                  </div>
+
+                  <div className="glass-card__body" style={{ padding: 0 }}>
+                    {myLeaves.length > 0 ? (
+                      <div style={{ overflowX: "auto" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                          <thead>
+                            <tr style={{ borderBottom: "1px solid var(--border-primary)", color: "var(--text-tertiary)", fontSize: "var(--font-xs)", textTransform: "uppercase" }}>
+                              <th style={{ padding: "var(--space-4) var(--space-6)" }}>Type</th>
+                              <th style={{ padding: "var(--space-4) var(--space-6)" }}>Start Date</th>
+                              <th style={{ padding: "var(--space-4) var(--space-6)" }}>End Date</th>
+                              <th style={{ padding: "var(--space-4) var(--space-6)" }}>Remarks</th>
+                              <th style={{ padding: "var(--space-4) var(--space-6)" }}>Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {myLeaves.map((leave) => (
+                              <tr key={leave.id} style={{ borderBottom: "1px solid var(--border-primary)" }} className="content-section">
+                                <td style={{ padding: "var(--space-4) var(--space-6)", fontWeight: 500 }}>
+                                  {leave.leaveType}
+                                </td>
+                                <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-secondary)" }}>
+                                  {new Date(leave.startDate).toLocaleDateString([], { timeZone: "UTC" })}
+                                </td>
+                                <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-secondary)" }}>
+                                  {new Date(leave.endDate).toLocaleDateString([], { timeZone: "UTC" })}
+                                </td>
+                                <td style={{ padding: "var(--space-4) var(--space-6)", fontStyle: "italic", fontSize: "var(--font-sm)", color: "var(--text-tertiary)" }}>
+                                  {leave.remarks || "—"}
+                                </td>
+                                <td style={{ padding: "var(--space-4) var(--space-6)" }}>
+                                  <span className="status-badge" style={getStatusStyle(leave.status)}>
+                                    {leave.status}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="empty-state">No requests registered yet.</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           /* ========================================================
@@ -433,22 +564,6 @@ function LeavesContent() {
              ======================================================== */
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-8)" }}>
             
-            <header className="page-header animate-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <h1 style={{ margin: 0 }}>My Time-Off Requests</h1>
-                <p style={{ color: "var(--text-secondary)", fontSize: "var(--font-sm)", marginTop: "4px" }}>
-                  Manage leaves for {profileUser?.name || "Employee"} ({profileUser?.employeeId || "—"})
-                </p>
-              </div>
-              <button
-                onClick={() => setIsApplying(true)}
-                className="btn-primary"
-                id="apply-leave-btn"
-              >
-                NEW
-              </button>
-            </header>
-
             {/* 12-Month Calendar Grid */}
             <div className="glass-card animate-in animate-in-delay-1" style={{ padding: "var(--space-6)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-4)" }}>

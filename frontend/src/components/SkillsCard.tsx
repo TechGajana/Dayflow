@@ -13,9 +13,10 @@ interface Skill {
 interface SkillsCardProps {
   userId: string;
   skills: Skill[];
+  onUpdate?: () => void;
 }
 
-export default function SkillsCard({ userId, skills }: SkillsCardProps) {
+export default function SkillsCard({ userId, skills, onUpdate }: SkillsCardProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newSkill, setNewSkill] = useState("");
   const [newLevel, setNewLevel] = useState(3);
@@ -35,12 +36,14 @@ export default function SkillsCard({ userId, skills }: SkillsCardProps) {
     setNewSkill("");
     setNewLevel(3);
     setIsAdding(false);
+    onUpdate?.();
     router.refresh();
   };
 
   const handleRemove = async (skillId: string) => {
     try {
       await deleteSkill(skillId);
+      onUpdate?.();
       router.refresh();
     } catch (err) {
       console.error("Failed to delete skill:", err);
@@ -68,8 +71,9 @@ export default function SkillsCard({ userId, skills }: SkillsCardProps) {
     return colors[level] || "var(--border-primary)";
   };
 
+  const isHr = viewer?.role === "HR" || viewer?.role === "ADMIN";
   const isSelf = viewer?.id === userId;
-  const canEdit = isSelf;
+  const canEdit = isSelf || isHr;
 
   return (
     <div className="glass-card animate-in animate-in-delay-2" id="skills-card">

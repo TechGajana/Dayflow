@@ -40,7 +40,8 @@ function AttendanceContent() {
         setLogs(allLogs);
         setAllProfiles(users);
       } else {
-        const targetId = userId || sess.id;
+        // Staff role: strictly view own attendance details
+        const targetId = sess.id;
         const [attLogs, prof, leavesData] = await Promise.all([
           fetchAttendance(targetId),
           fetchProfile(targetId),

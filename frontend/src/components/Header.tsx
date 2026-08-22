@@ -188,6 +188,36 @@ export default function Header() {
           </div>
         )}
 
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-2)",
+            padding: "var(--space-2) var(--space-4)",
+            background: "rgba(239, 68, 68, 0.15)",
+            border: "1px solid rgba(239, 68, 68, 0.3)",
+            color: "#f87171",
+            borderRadius: "var(--radius-sm)",
+            fontWeight: 600,
+            fontSize: "var(--font-sm)",
+            cursor: "pointer",
+            transition: "all 0.2s"
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(239, 68, 68, 0.25)";
+            e.currentTarget.style.color = "#ffffff";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
+            e.currentTarget.style.color = "#f87171";
+          }}
+          id="header-logout-btn"
+        >
+          🚪 Log Out
+        </button>
+
         {/* Profile Avatar Dropdown */}
         <div style={{ position: "relative" }}>
           <div

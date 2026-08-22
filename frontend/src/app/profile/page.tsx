@@ -227,7 +227,7 @@ function ProfileContent() {
           {/* Left Main Panels Area */}
           <div>
             <div className="glass-card animate-in animate-in-delay-1" id="profile-main-card">
-              <ProfileHeader user={user} />
+              <ProfileHeader user={user} onUpdate={loadProfile} />
 
               {/* Tabs Buttons */}
               <div style={{ display: "flex", gap: "var(--space-2)", borderBottom: "1px solid var(--border-primary)", padding: "0 var(--space-6)", background: "rgba(255,255,255,0.01)" }}>
@@ -314,6 +314,7 @@ function ProfileContent() {
                       content={user.about}
                       fieldKey="about"
                       animationDelay={0.1}
+                      onUpdate={loadProfile}
                     />
                     <ContentSection
                       userId={user.id}
@@ -322,6 +323,7 @@ function ProfileContent() {
                       content={user.jobLove}
                       fieldKey="jobLove"
                       animationDelay={0.2}
+                      onUpdate={loadProfile}
                     />
                     <ContentSection
                       userId={user.id}
@@ -330,6 +332,7 @@ function ProfileContent() {
                       content={user.hobbies}
                       fieldKey="hobbies"
                       animationDelay={0.3}
+                      onUpdate={loadProfile}
                     />
                   </div>
                 )}
@@ -340,23 +343,23 @@ function ProfileContent() {
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
                       <div className="form-group">
                         <label className="form-label">Date of Birth</label>
-                        <input type="date" className="form-input" value={dob} onChange={(e) => setDob(e.target.value)} disabled={!isSelf} />
+                        <input type="date" className="form-input" value={dob} onChange={(e) => setDob(e.target.value)} disabled={!(isSelf || isHr)} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Nationality</label>
-                        <input type="text" className="form-input" value={nationality} onChange={(e) => setNationality(e.target.value)} placeholder="e.g. Indian" disabled={!isSelf} />
+                        <input type="text" className="form-input" value={nationality} onChange={(e) => setNationality(e.target.value)} placeholder="e.g. Indian" disabled={!(isSelf || isHr)} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Personal Email</label>
-                        <input type="email" className="form-input" value={personalEmail} onChange={(e) => setPersonalEmail(e.target.value)} placeholder="e.g. name@personal.com" disabled={!isSelf} />
+                        <input type="email" className="form-input" value={personalEmail} onChange={(e) => setPersonalEmail(e.target.value)} placeholder="e.g. name@personal.com" disabled={!(isSelf || isHr)} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Residing Address</label>
-                        <input type="text" className="form-input" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="e.g. 123 Main St" disabled={!isSelf} />
+                        <input type="text" className="form-input" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="e.g. 123 Main St" disabled={!(isSelf || isHr)} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Gender</label>
-                        <select className="form-input" value={gender} onChange={(e) => setGender(e.target.value)} disabled={!isSelf}>
+                        <select className="form-input" value={gender} onChange={(e) => setGender(e.target.value)} disabled={!(isSelf || isHr)}>
                           <option value="">Select Gender</option>
                           <option value="Male">Male</option>
                           <option value="Female">Female</option>
@@ -365,7 +368,7 @@ function ProfileContent() {
                       </div>
                       <div className="form-group">
                         <label className="form-label">Marital Status</label>
-                        <select className="form-input" value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)} disabled={!isSelf}>
+                        <select className="form-input" value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)} disabled={!(isSelf || isHr)}>
                           <option value="">Select Status</option>
                           <option value="Single">Single</option>
                           <option value="Married">Married</option>
@@ -378,7 +381,15 @@ function ProfileContent() {
                       </div>
                       <div className="form-group">
                         <label className="form-label">Employee Code / ID</label>
-                        <input type="text" className="form-input" value={empCode} onChange={(e) => setEmpCode(e.target.value)} placeholder="e.g. OIJODO20220001" disabled={!isSelf} />
+                        <input type="text" className="form-input" value={empCode} onChange={(e) => setEmpCode(e.target.value)} placeholder="e.g. OIJODO20220001" disabled={!(isSelf || isHr)} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">System Role Access</label>
+                        <select className="form-input" value={role} onChange={(e) => setRole(e.target.value)} disabled={!isAdmin} style={{ borderColor: isAdmin ? "#c084fc" : "inherit" }}>
+                          <option value="EMPLOYEE">Staff Member (EMPLOYEE)</option>
+                          <option value="HR">HR Manager (HR)</option>
+                          <option value="ADMIN">System Admin (ADMIN)</option>
+                        </select>
                       </div>
                     </div>
 
@@ -386,27 +397,27 @@ function ProfileContent() {
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
                       <div className="form-group">
                         <label className="form-label">Bank Name</label>
-                        <input type="text" className="form-input" value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Wells Fargo" disabled={!isSelf} />
+                        <input type="text" className="form-input" value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Wells Fargo" disabled={!(isSelf || isHr)} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Account Number</label>
-                        <input type="text" className="form-input" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="987654321" disabled={!isSelf} />
+                        <input type="text" className="form-input" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="987654321" disabled={!(isSelf || isHr)} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">IFSC Code</label>
-                        <input type="text" className="form-input" value={ifscCode} onChange={(e) => setIfscCode(e.target.value)} placeholder="WFGO0004567" disabled={!isSelf} />
+                        <input type="text" className="form-input" value={ifscCode} onChange={(e) => setIfscCode(e.target.value)} placeholder="WFGO0004567" disabled={!(isSelf || isHr)} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">PAN Number</label>
-                        <input type="text" className="form-input" value={panNo} onChange={(e) => setPanNo(e.target.value)} placeholder="XYZWR9876K" disabled={!isSelf} />
+                        <input type="text" className="form-input" value={panNo} onChange={(e) => setPanNo(e.target.value)} placeholder="XYZWR9876K" disabled={!(isSelf || isHr)} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">UAN Number</label>
-                        <input type="text" className="form-input" value={uanNo} onChange={(e) => setUanNo(e.target.value)} placeholder="200987654321" disabled={!isSelf} />
+                        <input type="text" className="form-input" value={uanNo} onChange={(e) => setUanNo(e.target.value)} placeholder="200987654321" disabled={!(isSelf || isHr)} />
                       </div>
                     </div>
 
-                    {isSelf && (
+                    {(isSelf || isHr) && (
                       <button type="submit" className="btn-primary" style={{ alignSelf: "flex-end", marginTop: "var(--space-4)" }} disabled={isSavingPrivate}>
                         {isSavingPrivate ? "Saving..." : "Save Private Info"}
                       </button>
@@ -426,7 +437,7 @@ function ProfileContent() {
                           value={monthWage}
                           onChange={(e) => setMonthWage(parseFloat(e.target.value) || 0)}
                           id="month-wage-input"
-                          disabled={!isSelf}
+                          disabled={!(isSelf || isHr)}
                         />
                       </div>
                       <div className="form-group">
@@ -435,15 +446,15 @@ function ProfileContent() {
                       </div>
                       <div className="form-group">
                         <label className="form-label">No of working days in a week</label>
-                        <input type="number" className="form-input" value={workingDays} onChange={(e) => setWorkingDays(parseInt(e.target.value) || 5)} disabled={!isSelf} />
+                        <input type="number" className="form-input" value={workingDays} onChange={(e) => setWorkingDays(parseInt(e.target.value) || 5)} disabled={!(isSelf || isHr)} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Break Time (Hours)</label>
-                        <input type="number" step="0.1" className="form-input" value={breakTime} onChange={(e) => setBreakTime(parseFloat(e.target.value) || 1)} disabled={!isSelf} />
+                        <input type="number" step="0.1" className="form-input" value={breakTime} onChange={(e) => setBreakTime(parseFloat(e.target.value) || 1)} disabled={!(isSelf || isHr)} />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Hrs per day</label>
-                        <input type="number" className="form-input" value={hrsPerDay} onChange={(e) => setHrsPerDay(parseFloat(e.target.value) || 8)} disabled={!isSelf} />
+                        <input type="number" className="form-input" value={hrsPerDay} onChange={(e) => setHrsPerDay(parseFloat(e.target.value) || 8)} disabled={!(isSelf || isHr)} />
                       </div>
                     </div>
 
@@ -492,7 +503,7 @@ function ProfileContent() {
                       </table>
                     </div>
 
-                    {isSelf && (
+                    {(isSelf || isHr) && (
                       <button type="submit" className="btn-primary" style={{ alignSelf: "flex-end" }} disabled={isSavingSalary} id="salary-save-btn">
                         {isSavingSalary ? "Saving..." : "Save Salary Config"}
                       </button>
@@ -566,8 +577,8 @@ function ProfileContent() {
 
           {/* Right Aside Sidebar details */}
           <aside className="sidebar-stack" style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
-            <SkillsCard userId={user.id} skills={user.skills} />
-            <CertificationCard userId={user.id} certifications={user.certifications} />
+            <SkillsCard userId={user.id} skills={user.skills} onUpdate={loadProfile} />
+            <CertificationCard userId={user.id} certifications={user.certifications} onUpdate={loadProfile} />
           </aside>
 
         </div>

@@ -59,20 +59,20 @@ const getAllProfiles: RequestHandler = async (_req, res, next) => {
 // POST /api/profile/employee - Create new employee user (HR/Admin only)
 const createEmployee: RequestHandler = async (req, res, next) => {
   try {
-    const { hrUserId, name, email, mobile, department, title, basicSalary, allowance, deductions } = req.body;
+    const { hrUserId, name, email, mobile, department, title, basicSalary, role } = req.body;
 
     if (!hrUserId || !name || !email) {
-      res.status(400).json({ error: "HR User ID, Employee Name, and Email are required" });
+      res.status(400).json({ error: "User ID, Name, and Email are required" });
       return;
     }
 
-    // Find HR user to get the company name
+    // Find requesting user
     const hrUser = await prisma.user.findUnique({
       where: { id: hrUserId }
     });
 
-    if (!hrUser || hrUser.role !== "HR") {
-      res.status(403).json({ error: "Unauthorized. Only HR Managers can create employees." });
+    if (!hrUser || (hrUser.role !== "HR" && hrUser.role !== "ADMIN")) {
+      res.status(403).json({ error: "Unauthorized. Only HR Managers and Admins can create users." });
       return;
     }
 
@@ -94,13 +94,15 @@ const createEmployee: RequestHandler = async (req, res, next) => {
     const temporaryPassword = `DF${randomDigits}`;
     const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
 
+    const userRole = role && ["EMPLOYEE", "HR", "ADMIN"].includes(role) ? role : "EMPLOYEE";
+
     const newEmployee = await prisma.user.create({
       data: {
         employeeId,
         name,
         email,
         password: hashedPassword,
-        role: "EMPLOYEE",
+        role: userRole,
         mobile: mobile || null,
         company: companyName,
         department: department || null,
@@ -110,7 +112,7 @@ const createEmployee: RequestHandler = async (req, res, next) => {
         workingDaysPerWeek: 5,
         breakTime: 1.0,
         hrsPerDay: 8.0,
-        about: "New employee profile.",
+        about: "New user profile.",
         jobLove: "I love contributing my skills to the product engineering lifecycle.",
         hobbies: "Exploring tech, gaming.",
       }
@@ -154,6 +156,7 @@ const updateProfile: RequestHandler = async (req, res, next) => {
       workingDaysPerWeek,
       breakTime,
       hrsPerDay,
+      avatarUrl,
       role,
     } = req.body;
 
@@ -168,6 +171,7 @@ const updateProfile: RequestHandler = async (req, res, next) => {
         name,
         email,
         mobile,
+        avatarUrl,
         company,
         department,
         manager,
