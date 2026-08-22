@@ -1,0 +1,5 @@
+'use client'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+export default function VerifyEmail(){ const params=useSearchParams(); const [status,setStatus]=useState('Verifying your email…'); useEffect(()=>{const token=params.get('token'); if(!token){setStatus('This verification link is invalid.');return} fetch('/api/auth/verify',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({token})}).then(r=>r.json()).then(d=>setStatus(d.ok?'Email verified. You can now sign in to Dayflow.':'This link is invalid or expired.'))},[params]); return <main className="grid min-h-screen place-items-center bg-background p-6"><div className="w-full max-w-md rounded-3xl border border-border bg-card p-10 text-center shadow-xl"><div className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground">D</div><h1 className="mt-6 text-2xl font-semibold">{status}</h1><Link href="/" className="mt-7 inline-flex rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">Continue to sign in</Link></div></main> }

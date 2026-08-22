@@ -1,0 +1,5 @@
+import { NextResponse } from 'next/server'
+import { z } from 'zod'
+import { createSession, getUserByEmail, toSessionUser, verifyPassword } from '@/lib/auth'
+const schema=z.object({email:z.string().email(),password:z.string().min(1)})
+export async function POST(request:Request){ const parsed=schema.safeParse(await request.json()); if(!parsed.success)return NextResponse.json({error:'Invalid email or password.'},{status:400}); const user=getUserByEmail(parsed.data.email); if(!user || !(await verifyPassword(parsed.data.password,user.password_hash))) return NextResponse.json({error:'Invalid email or password.'},{status:401}); if(!user.is_verified)return NextResponse.json({error:'Please verify your email before signing in.'},{status:403}); const token=await createSession(toSessionUser(user)); const response=NextResponse.json({user:toSessionUser(user)}); response.cookies.set('dayflow_session',token,{httpOnly:true,sameSite:'lax',secure:process.env.NODE_ENV==='production',maxAge:604800,path:'/'}); return response }
