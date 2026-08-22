@@ -53,8 +53,7 @@ export default function Header() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("dayflow_user");
-    router.push("/login");
+    router.push("/logout");
   };
 
   if (!user) return null;

@@ -34,15 +34,14 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const user = await register({
+      await register({
         companyName,
         name,
         email,
         mobile,
         password,
       });
-      localStorage.setItem("dayflow_user", JSON.stringify(user));
-      router.push("/dashboard");
+      router.push(`/login?registered=true&email=${encodeURIComponent(email)}`);
     } catch (err: any) {
       setError(err.message || "Registration failed");
     } finally {
