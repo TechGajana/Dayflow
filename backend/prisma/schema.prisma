@@ -24,12 +24,28 @@ model User {
   location     String?
   title        String?
   joinDate     DateTime @default(now())
-  address      String?
   
-  // Salary/Payroll Info
-  basicSalary  Float    @default(0.0)
-  allowance    Float    @default(0.0)
-  deductions   Float    @default(0.0)
+  // Private Info
+  dob          DateTime?
+  address      String?
+  nationality  String?
+  personalEmail String?
+  gender       String?
+  maritalStatus String?
+
+  // Bank Details
+  accountNumber String?
+  bankName     String?
+  ifscCode     String?
+  panNo        String?
+  uanNo        String?
+  empCode      String?
+
+  // Salary Configuration
+  monthWage    Float    @default(0.0)
+  workingDaysPerWeek Int @default(5)
+  breakTime    Float    @default(1.0) // hours
+  hrsPerDay    Float    @default(8.0) // hours
 
   about        String?  @db.Text
   jobLove      String?  @db.Text

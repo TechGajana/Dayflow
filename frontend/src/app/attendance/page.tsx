@@ -2,8 +2,8 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
-import { fetchAttendance, fetchProfile, Attendance, User } from "@/lib/api";
+import Header from "@/components/Header";
+import { fetchAttendance, fetchProfile, fetchAllProfiles, Attendance, User, UserBrief } from "@/lib/api";
 
 function AttendanceContent() {
   const router = useRouter();
@@ -13,7 +13,12 @@ function AttendanceContent() {
   const [currentUser, setCurrentUser] = useState<{ id: string; role: string } | null>(null);
   const [profileUser, setProfileUser] = useState<User | null>(null);
   const [logs, setLogs] = useState<Attendance[]>([]);
+  const [allProfiles, setAllProfiles] = useState<UserBrief[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // HR Date Filter State
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [hrSearchQuery, setHrSearchQuery] = useState("");
 
   useEffect(() => {
     const storedUser = localStorage.getItem("dayflow_user");
@@ -24,35 +29,65 @@ function AttendanceContent() {
     const sess = JSON.parse(storedUser);
     setCurrentUser(sess);
 
-    const targetId = userId || sess.id;
-
-    const loadLogs = async () => {
+    const loadData = async () => {
       try {
-        const [attLogs, prof] = await Promise.all([
-          fetchAttendance(targetId),
-          fetchProfile(targetId)
-        ]);
-        setLogs(attLogs);
-        setProfileUser(prof);
+        if (sess.role === "HR") {
+          const [allLogs, users] = await Promise.all([
+            fetchAttendance(), // Loads all logs in the database
+            fetchAllProfiles()
+          ]);
+          setLogs(allLogs);
+          setAllProfiles(users);
+        } else {
+          const targetId = userId || sess.id;
+          const [attLogs, prof] = await Promise.all([
+            fetchAttendance(targetId),
+            fetchProfile(targetId)
+          ]);
+          setLogs(attLogs);
+          setProfileUser(prof);
+        }
       } catch (err) {
-        console.error("Failed to load attendance logs:", err);
+        console.error("Failed to load attendance metrics:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    loadLogs();
+    loadData();
+
+    // Refresh if header triggers check-in
+    window.addEventListener("attendanceUpdate", loadData);
+    return () => window.removeEventListener("attendanceUpdate", loadData);
   }, [router, userId]);
 
-  const calculateHours = (inStr: string | null, outStr: string | null) => {
-    if (!inStr) return "—";
+  // Formatter for check-in / out times
+  const formatTime = (timeStr: string | null) => {
+    if (!timeStr) return "—";
+    return new Date(timeStr).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
+  // Calculate work duration in hours
+  const calculateWorkHours = (inStr: string | null, outStr: string | null) => {
+    if (!inStr) return 0;
     const start = new Date(inStr).getTime();
     const end = outStr ? new Date(outStr).getTime() : new Date().getTime();
-    const diff = end - start;
+    return (end - start) / 3600000;
+  };
 
-    const hrs = Math.floor(diff / 3600000);
-    const mins = Math.floor((diff % 3600000) / 60000);
-    return `${hrs}h ${mins}m${!outStr ? " (Active)" : ""}`;
+  // Formats decimal hours into HH:MM
+  const formatHours = (hoursDecimal: number) => {
+    if (hoursDecimal <= 0) return "—";
+    const hrs = Math.floor(hoursDecimal);
+    const mins = Math.floor((hoursDecimal - hrs) * 60);
+    return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`;
+  };
+
+  // Extra hours calculated as: work hours - 8 hours
+  const getExtraHours = (workHoursDecimal: number) => {
+    const extra = workHoursDecimal - 8.0;
+    if (extra <= 0) return "00:00";
+    return formatHours(extra);
   };
 
   const getStatusStyle = (status: string) => {
@@ -68,6 +103,13 @@ function AttendanceContent() {
     }
   };
 
+  // Handle Date Navigation
+  const changeDate = (days: number) => {
+    const copy = new Date(selectedDate);
+    copy.setDate(selectedDate.getDate() + days);
+    setSelectedDate(copy);
+  };
+
   if (loading || !currentUser) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", color: "var(--text-secondary)" }}>
@@ -76,75 +118,212 @@ function AttendanceContent() {
     );
   }
 
+  const isHr = currentUser.role === "HR";
+
+  // Filter logs for the selected date (for HR Manager)
+  const filteredHrLogs = logs.filter((log) => {
+    const logDate = new Date(log.date).toDateString();
+    const filterDate = selectedDate.toDateString();
+    if (logDate !== filterDate) return false;
+
+    // Filter by employee name if query exists
+    if (hrSearchQuery) {
+      const emp = allProfiles.find((p) => p.id === log.userId);
+      return emp?.name.toLowerCase().includes(hrSearchQuery.toLowerCase());
+    }
+    return true;
+  });
+
   return (
-    <div style={{ display: "flex", gap: "var(--space-8)", padding: "var(--space-8)", maxWidth: "1400px", margin: "0 auto" }}>
-      <Sidebar />
+    <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
+      <Header />
 
-      <div style={{ flex: 1 }}>
-        <header className="page-header animate-in">
-          <div>
-            <h1>Attendance History</h1>
-            <p style={{ color: "var(--text-secondary)", fontSize: "var(--font-sm)", marginTop: "4px" }}>
-              Viewing logs for {profileUser?.name || "Employee"} ({profileUser?.employeeId || "—"})
-            </p>
-          </div>
-        </header>
+      <main style={{ padding: "0 var(--space-8) var(--space-8) var(--space-8)", maxWidth: "1400px", margin: "0 auto" }}>
+        
+        {/* ========================================================
+           HR / ADMIN DAILY REPORT VIEW
+           ======================================================== */}
+        {isHr ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
+            
+            {/* Attendance controls card */}
+            <div className="glass-card animate-in">
+              <div
+                className="glass-card__body"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "var(--space-4)"
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
+                  <button onClick={() => changeDate(-1)} className="btn-ghost" style={{ padding: "var(--space-2) var(--space-3)" }}>
+                    ◀
+                  </button>
+                  <button onClick={() => changeDate(1)} className="btn-ghost" style={{ padding: "var(--space-2) var(--space-3)" }}>
+                    ▶
+                  </button>
+                  
+                  <input
+                    type="date"
+                    className="form-input"
+                    value={selectedDate.toISOString().split("T")[0]}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setSelectedDate(new Date(e.target.value));
+                      }
+                    }}
+                    style={{ maxWidth: "160px", display: "inline-block" }}
+                    id="hr-datepicker"
+                  />
+                </div>
 
-        <div className="glass-card animate-in animate-in-delay-1" id="attendance-logs-card">
-          <div className="glass-card__header">
-            <h2>Log Sheet</h2>
-            <span style={{ fontSize: "var(--font-xs)", color: "var(--text-tertiary)" }}>
-              {logs.length} logs
-            </span>
-          </div>
+                <div style={{ textAlign: "center" }}>
+                  <h2 style={{ margin: 0, fontSize: "var(--font-lg)" }}>
+                    {selectedDate.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                  </h2>
+                </div>
 
-          <div className="glass-card__body" style={{ padding: 0 }}>
-            {logs.length > 0 ? (
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid var(--border-primary)", color: "var(--text-tertiary)", fontSize: "var(--font-xs)", textTransform: "uppercase" }}>
-                      <th style={{ padding: "var(--space-4) var(--space-6)" }}>Date</th>
-                      <th style={{ padding: "var(--space-4) var(--space-6)" }}>Check-In</th>
-                      <th style={{ padding: "var(--space-4) var(--space-6)" }}>Check-Out</th>
-                      <th style={{ padding: "var(--space-4) var(--space-6)" }}>Duration</th>
-                      <th style={{ padding: "var(--space-4) var(--space-6)" }}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {logs.map((log) => (
-                      <tr key={log.id} style={{ borderBottom: "1px solid var(--border-primary)", transition: "background var(--transition-fast)" }} className="content-section">
-                        <td style={{ padding: "var(--space-4) var(--space-6)", fontWeight: 500 }}>
-                          {new Date(log.date).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
-                        </td>
-                        <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-secondary)" }}>
-                          {log.checkIn ? new Date(log.checkIn).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
-                        </td>
-                        <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-secondary)" }}>
-                          {log.checkOut ? new Date(log.checkOut).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
-                        </td>
-                        <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-primary)", fontWeight: 600 }}>
-                          {calculateHours(log.checkIn, log.checkOut)}
-                        </td>
-                        <td style={{ padding: "var(--space-4) var(--space-6)" }}>
-                          <span className="status-badge" style={getStatusStyle(log.status)}>
-                            {log.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Search employee..."
+                    className="form-input"
+                    value={hrSearchQuery}
+                    onChange={(e) => setHrSearchQuery(e.target.value)}
+                    style={{ maxWidth: "220px" }}
+                    id="hr-attendance-search"
+                  />
+                </div>
               </div>
-            ) : (
-              <div className="empty-state">
-                <div className="empty-state__icon">⏰</div>
-                <p className="empty-state__text">No check-in logs recorded yet.</p>
+            </div>
+
+            {/* Attendance Grid Table */}
+            <div className="glass-card animate-in animate-in-delay-1">
+              <div className="glass-card__header">
+                <h2>All Employee Daily Attendance</h2>
+                <span style={{ fontSize: "var(--font-xs)", color: "var(--text-tertiary)" }}>
+                  {filteredHrLogs.length} present today
+                </span>
               </div>
-            )}
+
+              <div className="glass-card__body" style={{ padding: 0 }}>
+                {filteredHrLogs.length > 0 ? (
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid var(--border-primary)", color: "var(--text-tertiary)", fontSize: "var(--font-xs)", textTransform: "uppercase" }}>
+                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Emp</th>
+                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Check In</th>
+                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Check Out</th>
+                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Work Hours</th>
+                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Extra hours</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredHrLogs.map((log) => {
+                          const emp = allProfiles.find((p) => p.id === log.userId);
+                          const workHours = calculateWorkHours(log.checkIn, log.checkOut);
+
+                          return (
+                            <tr key={log.id} style={{ borderBottom: "1px solid var(--border-primary)" }} className="content-section">
+                              <td style={{ padding: "var(--space-4) var(--space-6)", fontWeight: 600 }}>
+                                {emp?.name || "Unknown Employee"}
+                              </td>
+                              <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-secondary)" }}>
+                                {formatTime(log.checkIn)}
+                              </td>
+                              <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-secondary)" }}>
+                                {formatTime(log.checkOut)}
+                              </td>
+                              <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-primary)", fontWeight: 700 }}>
+                                {formatHours(workHours)}
+                              </td>
+                              <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-accent)" }}>
+                                {getExtraHours(workHours)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="empty-state">
+                    <div className="empty-state__icon">⏰</div>
+                    <p className="empty-state__text">No attendance records found for this date.</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        ) : (
+          /* ========================================================
+             EMPLOYEE INDIVIDUAL MONTH-WISE LIST
+             ======================================================== */
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
+            <div className="glass-card animate-in">
+              <div className="glass-card__header">
+                <h2>Ongoing Month Attendance Logs</h2>
+                <span style={{ fontSize: "var(--font-xs)", color: "var(--text-secondary)" }}>
+                  Viewing logs for {profileUser?.name || "Employee"} ({profileUser?.employeeId || "—"})
+                </span>
+              </div>
+
+              <div className="glass-card__body" style={{ padding: 0 }}>
+                {logs.length > 0 ? (
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid var(--border-primary)", color: "var(--text-tertiary)", fontSize: "var(--font-xs)", textTransform: "uppercase" }}>
+                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Date</th>
+                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Check-In</th>
+                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Check-Out</th>
+                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Duration</th>
+                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {logs.map((log) => {
+                          const hrs = calculateWorkHours(log.checkIn, log.checkOut);
+                          return (
+                            <tr key={log.id} style={{ borderBottom: "1px solid var(--border-primary)" }} className="content-section">
+                              <td style={{ padding: "var(--space-4) var(--space-6)", fontWeight: 500 }}>
+                                {new Date(log.date).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
+                              </td>
+                              <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-secondary)" }}>
+                                {formatTime(log.checkIn)}
+                              </td>
+                              <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-secondary)" }}>
+                                {formatTime(log.checkOut)}
+                              </td>
+                              <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-primary)", fontWeight: 600 }}>
+                                {formatHours(hrs)}
+                              </td>
+                              <td style={{ padding: "var(--space-4) var(--space-6)" }}>
+                                <span className="status-badge" style={getStatusStyle(log.status)}>
+                                  {log.status}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="empty-state">
+                    <div className="empty-state__icon">⏰</div>
+                    <p className="empty-state__text">No check-in logs recorded yet.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

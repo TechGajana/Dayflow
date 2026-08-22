@@ -57,10 +57,27 @@ export interface User {
   location: string | null;
   title: string | null;
   joinDate: string;
+  // Private Info
+  dob?: string | null;
   address: string | null;
-  basicSalary: number;
-  allowance: number;
-  deductions: number;
+  nationality?: string | null;
+  personalEmail?: string | null;
+  gender?: string | null;
+  maritalStatus?: string | null;
+
+  // Bank Details
+  accountNumber?: string | null;
+  bankName?: string | null;
+  ifscCode?: string | null;
+  panNo?: string | null;
+  uanNo?: string | null;
+  empCode?: string | null;
+
+  // Salary Configuration
+  monthWage: number;
+  workingDaysPerWeek: number;
+  breakTime: number;
+  hrsPerDay: number;
   about: string | null;
   jobLove: string | null;
   hobbies: string | null;
@@ -312,6 +329,23 @@ export async function createEmployee(data: {
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.error || "Failed to create employee");
+  }
+  return response.json();
+}
+
+export async function changePassword(data: {
+  userId: string;
+  oldPassword?: string;
+  newPassword?: string;
+}): Promise<{ success: boolean }> {
+  const response = await fetch(`${API_BASE_URL}/auth/password`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Failed to update password");
   }
   return response.json();
 }

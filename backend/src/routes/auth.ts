@@ -37,9 +37,10 @@ const registerUser: RequestHandler = async (req, res, next) => {
         mobile: mobile || null,
         company: companyName,
         joinDate,
-        basicSalary: 6500.0, // Default HR Manager Salary
-        allowance: 500.0,
-        deductions: 200.0,
+        monthWage: 6500.0, // Default HR Manager Salary
+        workingDaysPerWeek: 5,
+        breakTime: 1.0,
+        hrsPerDay: 8.0,
         about: `HR Manager at ${companyName}.`,
         jobLove: "I love streamlining HR and building a strong employee workflow.",
         hobbies: "Corporate planning, reading.",
@@ -91,7 +92,42 @@ const loginUser: RequestHandler = async (req, res, next) => {
   }
 };
 
+// PUT /api/auth/password - Update password (used by Security tab)
+const changePassword: RequestHandler = async (req, res, next) => {
+  try {
+    const { userId, oldPassword, newPassword } = req.body;
+
+    if (!userId || !oldPassword || !newPassword) {
+      res.status(400).json({ error: "All fields are required" });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      res.status(400).json({ error: "Current password does not match" });
+      return;
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashed }
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+};
+
 router.post("/register", registerUser);
 router.post("/login", loginUser);
+router.put("/password", changePassword);
 
 export default router;
