@@ -4,19 +4,133 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import { fetchLeaves, applyLeave, approveLeave, rejectLeave, fetchProfile, LeaveRequest, User } from "@/lib/api";
-import EditModal from "@/components/EditModal";
+
+// 12-Month Leave Calendar Grid Component
+function CalendarYearGrid({ leaves }: { leaves: LeaveRequest[] }) {
+  const year = new Date().getFullYear();
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const dayLabels = ["S", "M", "T", "W", "T", "F", "S"];
+
+  // Helper to determine status for a specific date
+  const getDateStatus = (date: Date) => {
+    // Clear hours to compare date portion only
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+
+    for (const leave of leaves) {
+      const start = new Date(leave.startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(leave.endDate);
+      end.setHours(23, 59, 59, 999);
+
+      if (compareDate >= start && compareDate <= end) {
+        return leave.status;
+      }
+    }
+    return null;
+  };
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "var(--space-6)" }}>
+      {months.map((m, monthIdx) => {
+        const totalDays = new Date(year, monthIdx + 1, 0).getDate();
+        const startOffset = new Date(year, monthIdx, 1).getDay();
+        const daysArray = [];
+
+        // Padding cells for grid offset
+        for (let i = 0; i < startOffset; i++) {
+          daysArray.push(null);
+        }
+        for (let i = 1; i <= totalDays; i++) {
+          daysArray.push(new Date(year, monthIdx, i));
+        }
+
+        return (
+          <div key={m} className="glass-card" style={{ padding: "var(--space-4)" }}>
+            <h4 style={{ textAlign: "center", margin: "0 0 var(--space-3) 0", fontSize: "var(--font-sm)" }}>{m}</h4>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px", textAlign: "center", fontSize: "10px" }}>
+              {dayLabels.map((lbl, idx) => (
+                <div key={idx} style={{ color: "var(--text-tertiary)", fontWeight: 700 }}>{lbl}</div>
+              ))}
+              
+              {daysArray.map((day, dayIdx) => {
+                if (!day) return <div key={`empty-${dayIdx}`} />;
+                const status = getDateStatus(day);
+
+                let bg = "none";
+                let color = "var(--text-primary)";
+                if (status === "APPROVED") {
+                  bg = "var(--danger)"; // Red
+                  color = "white";
+                } else if (status === "PENDING") {
+                  bg = "var(--warning)"; // Orange
+                  color = "white";
+                } else if (status === "REJECTED") {
+                  bg = "rgba(255, 255, 255, 0.08)"; // Grey
+                  color = "var(--text-secondary)";
+                }
+
+                return (
+                  <div
+                    key={dayIdx}
+                    style={{
+                      width: "22px",
+                      height: "22px",
+                      lineHeight: "22px",
+                      borderRadius: "4px",
+                      background: bg,
+                      color: color,
+                      margin: "0 auto",
+                      fontWeight: status ? "bold" : "normal"
+                    }}
+                  >
+                    {day.getDate()}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 function LeavesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userId = searchParams.get("id");
 
-  const [currentUser, setCurrentUser] = useState<{ id: string; role: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string; role: string; name: string } | null>(null);
   const [profileUser, setProfileUser] = useState<User | null>(null);
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case "APPROVED":
+        return { background: "rgba(52, 211, 153, 0.1)", color: "var(--success)", borderColor: "rgba(52, 211, 153, 0.2)" };
+      case "REJECTED":
+        return { background: "rgba(248, 113, 113, 0.1)", color: "var(--danger)", borderColor: "rgba(248, 113, 113, 0.2)" };
+      default:
+        return { background: "rgba(250, 204, 21, 0.1)", color: "var(--warning)", borderColor: "rgba(250, 204, 21, 0.2)" };
+    }
+  };
+  
+  // Custom Time Off Request Modal State
   const [isApplying, setIsApplying] = useState(false);
+  const [leaveType, setLeaveType] = useState("Paid Time off");
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
+  const [remarks, setRemarks] = useState("");
+  const [attachmentName, setAttachmentName] = useState("");
+
   const [hrComment, setHrComment] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const loadLeaves = async () => {
     try {
@@ -25,7 +139,7 @@ function LeavesContent() {
       const sess = JSON.parse(storedUser);
 
       if (sess.role === "HR") {
-        const leavesData = await fetchLeaves(); // Load all leave requests in system
+        const leavesData = await fetchLeaves();
         setLeaves(leavesData);
       } else {
         const targetId = userId || sess.id;
@@ -55,19 +169,37 @@ function LeavesContent() {
     loadLeaves();
   }, [router, userId]);
 
-  const handleApplyLeave = async (formData: Record<string, string>) => {
+  // Calculate leave days count (excluding weekends)
+  const getLeaveDaysDuration = (startStr: string, endStr: string) => {
+    const start = new Date(startStr);
+    const end = new Date(endStr);
+    let count = 0;
+
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const dayOfWeek = d.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Exclude Sat/Sun
+        count++;
+      }
+    }
+    return count;
+  };
+
+  const handleApplyLeave = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!currentUser) return;
     const targetId = userId || currentUser.id;
     try {
       await applyLeave({
         userId: targetId,
-        leaveType: formData.leaveType,
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-        remarks: formData.remarks || undefined,
+        leaveType,
+        startDate,
+        endDate,
+        remarks: remarks || undefined,
       });
 
       setIsApplying(false);
+      setRemarks("");
+      setAttachmentName("");
       loadLeaves();
     } catch (err) {
       alert("Failed to submit leave request");
@@ -94,17 +226,6 @@ function LeavesContent() {
     }
   };
 
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "APPROVED":
-        return { background: "rgba(52, 211, 153, 0.1)", color: "var(--success)", borderColor: "rgba(52, 211, 153, 0.2)" };
-      case "REJECTED":
-        return { background: "rgba(248, 113, 113, 0.1)", color: "var(--danger)", borderColor: "rgba(248, 113, 113, 0.2)" };
-      default:
-        return { background: "rgba(250, 204, 21, 0.1)", color: "var(--warning)", borderColor: "rgba(250, 204, 21, 0.2)" };
-    }
-  };
-
   if (loading || !currentUser) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", color: "var(--text-secondary)" }}>
@@ -114,7 +235,29 @@ function LeavesContent() {
   }
 
   const isHr = currentUser.role === "HR";
-  const pendingLeaves = leaves.filter((l) => l.status === "PENDING");
+
+  // Calculate available days (Paid quota = 24 base, Sick quota = 7 base)
+  const approvedPaidLeaves = leaves.filter((l) => l.leaveType === "Paid Time off" && l.status === "APPROVED");
+  const approvedSickLeaves = leaves.filter((l) => l.leaveType === "Sick Leave" && l.status === "APPROVED");
+
+  const paidDaysUsed = approvedPaidLeaves.reduce((acc, l) => acc + getLeaveDaysDuration(l.startDate, l.endDate), 0);
+  const sickDaysUsed = approvedSickLeaves.reduce((acc, l) => acc + getLeaveDaysDuration(l.startDate, l.endDate), 0);
+
+  const paidDaysAvailable = Math.max(0, 24 - paidDaysUsed);
+  const sickDaysAvailable = Math.max(0, 7 - sickDaysUsed);
+
+  // Filter leave requests for search query
+  const filteredLeaves = leaves.filter((l) => {
+    if (!searchQuery) return true;
+    return (
+      l.user?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      l.leaveType.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
+
+  const pendingLeaves = filteredLeaves.filter((l) => l.status === "PENDING");
+
+  const durationDays = getLeaveDaysDuration(startDate, endDate);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
@@ -122,121 +265,121 @@ function LeavesContent() {
 
       <main style={{ padding: "0 var(--space-8) var(--space-8) var(--space-8)", maxWidth: "1400px", margin: "0 auto" }}>
         
+        {/* Quota Indicators */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "var(--space-6)", marginBottom: "var(--space-6)" }}>
+          <div className="glass-card" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "var(--space-4)" }}>
+            <span style={{ fontSize: "var(--font-xs)", color: "var(--text-tertiary)", textTransform: "uppercase" }}>Paid Time Off</span>
+            <h2 style={{ margin: "4px 0 0 0", color: "var(--text-accent)" }}>{paidDaysAvailable.toString().padStart(2, "0")} Days Available</h2>
+          </div>
+          <div className="glass-card" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "var(--space-4)" }}>
+            <span style={{ fontSize: "var(--font-xs)", color: "var(--text-tertiary)", textTransform: "uppercase" }}>Sick Time Off</span>
+            <h2 style={{ margin: "4px 0 0 0", color: "var(--warning)" }}>{sickDaysAvailable.toString().padStart(2, "0")} Days Available</h2>
+          </div>
+        </div>
+
         {/* ========================================================
-           HR / ADMIN APPROVALS QUEUE & LEAVES LEDGER
+           HR / ADMIN VIEW - APPROVAL TABLE & SEARCH
            ======================================================== */}
         {isHr ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
             
-            {/* Pending Approvals */}
-            <div className="glass-card animate-in">
-              <div className="glass-card__header">
-                <h2>Pending Time-Off Request Approvals Queue</h2>
-              </div>
-              <div className="glass-card__body">
-                {pendingLeaves.length > 0 ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
-                    <div style={{ display: "flex", gap: "var(--space-3)", marginBottom: "var(--space-2)" }}>
-                      <input
-                        type="text"
-                        placeholder="Add HR comment/remarks for this decision..."
-                        className="form-input"
-                        value={hrComment}
-                        onChange={(e) => setHrComment(e.target.value)}
-                        style={{ flex: 1 }}
-                        id="hr-leave-decision-comment"
-                      />
-                    </div>
-                    {pendingLeaves.map((request) => (
-                      <div
-                        key={request.id}
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          padding: "var(--space-4)",
-                          background: "var(--bg-glass)",
-                          border: "1px solid var(--border-primary)",
-                          borderRadius: "var(--radius-md)"
-                        }}
-                        className="leave-queue-item"
-                      >
-                        <div>
-                          <div style={{ fontWeight: 600 }}>{request.user?.name} ({request.user?.employeeId})</div>
-                          <div style={{ fontSize: "var(--font-sm)", color: "var(--text-secondary)", marginTop: "2px" }}>
-                            Leave Type: {request.leaveType} • {new Date(request.startDate).toLocaleDateString()} to {new Date(request.endDate).toLocaleDateString()}
-                          </div>
-                          {request.remarks && (
-                            <div style={{ fontSize: "var(--font-xs)", color: "var(--text-tertiary)", marginTop: "4px", fontStyle: "italic" }}>
-                              &ldquo;{request.remarks}&rdquo;
-                            </div>
-                          )}
-                        </div>
-
-                        <div style={{ display: "flex", gap: "var(--space-2)" }}>
-                          <button
-                            onClick={() => handleApprove(request.id)}
-                            className="btn-primary"
-                            style={{ background: "var(--success)", boxShadow: "0 2px 8px rgba(52, 211, 153, 0.3)" }}
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleReject(request.id)}
-                            className="btn-primary"
-                            style={{ background: "var(--danger)", boxShadow: "0 2px 8px rgba(248, 113, 113, 0.3)" }}
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="empty-state">
-                    <div className="empty-state__icon">🎉</div>
-                    <p className="empty-state__text">Approvals queue is clear! No pending leave requests.</p>
-                  </div>
-                )}
+            {/* HR controls bar */}
+            <div className="glass-card">
+              <div className="glass-card__body" style={{ display: "flex", gap: "var(--space-4)", alignItems: "center" }}>
+                <input
+                  type="text"
+                  placeholder="Search leave requests by employee or type..."
+                  className="form-input"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{ maxWidth: "480px" }}
+                  id="hr-leaves-search"
+                />
+                
+                <input
+                  type="text"
+                  placeholder="Add feedback comment for approval/rejection..."
+                  className="form-input"
+                  value={hrComment}
+                  onChange={(e) => setHrComment(e.target.value)}
+                  style={{ flex: 1 }}
+                  id="hr-leave-comment"
+                />
               </div>
             </div>
 
-            {/* Historical Log */}
-            <div className="glass-card animate-in animate-in-delay-1">
+            {/* Leaves Request Table */}
+            <div className="glass-card">
               <div className="glass-card__header">
-                <h2>All Employee Leaves History</h2>
+                <h2>Time Off Logs Registry</h2>
                 <span style={{ fontSize: "var(--font-xs)", color: "var(--text-tertiary)" }}>
-                  {leaves.length} total entries
+                  {filteredLeaves.length} requests total
                 </span>
               </div>
+
               <div className="glass-card__body" style={{ padding: 0 }}>
-                {leaves.length > 0 ? (
+                {filteredLeaves.length > 0 ? (
                   <div style={{ overflowX: "auto" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                       <thead>
                         <tr style={{ borderBottom: "1px solid var(--border-primary)", color: "var(--text-tertiary)", fontSize: "var(--font-xs)", textTransform: "uppercase" }}>
-                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Employee</th>
-                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Type</th>
-                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Dates</th>
-                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>HR Comments</th>
-                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Status</th>
+                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Name</th>
+                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Start Date</th>
+                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>End Date</th>
+                          <th style={{ padding: "var(--space-4) var(--space-6)" }}>Time off Type</th>
+                          <th style={{ padding: "var(--space-4) var(--space-6)", textAlign: "center" }}>Status & Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {leaves.map((l) => (
-                          <tr key={l.id} style={{ borderBottom: "1px solid var(--border-primary)" }} className="content-section">
-                            <td style={{ padding: "var(--space-4) var(--space-6)", fontWeight: 600 }}>{l.user?.name}</td>
-                            <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-secondary)" }}>{l.leaveType}</td>
+                        {filteredLeaves.map((request) => (
+                          <tr key={request.id} style={{ borderBottom: "1px solid var(--border-primary)" }} className="content-section">
+                            <td style={{ padding: "var(--space-4) var(--space-6)", fontWeight: 600 }}>{request.user?.name}</td>
                             <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-secondary)" }}>
-                              {new Date(l.startDate).toLocaleDateString()} to {new Date(l.endDate).toLocaleDateString()}
+                              {new Date(request.startDate).toLocaleDateString([], { timeZone: "UTC" })}
                             </td>
-                            <td style={{ padding: "var(--space-4) var(--space-6)", fontStyle: "italic", fontSize: "var(--font-sm)", color: "var(--text-tertiary)" }}>
-                              {l.comment || "—"}
+                            <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-secondary)" }}>
+                              {new Date(request.endDate).toLocaleDateString([], { timeZone: "UTC" })}
                             </td>
-                            <td style={{ padding: "var(--space-4) var(--space-6)" }}>
-                              <span className="status-badge" style={getStatusStyle(l.status)}>
-                                {l.status}
-                              </span>
+                            <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-primary)" }}>{request.leaveType}</td>
+                            <td style={{ padding: "var(--space-4) var(--space-6)", display: "flex", justifyContent: "center", gap: "var(--space-2)" }}>
+                              {request.status === "PENDING" ? (
+                                <>
+                                  <button
+                                    onClick={() => handleReject(request.id)}
+                                    style={{
+                                      background: "var(--danger)",
+                                      border: "none",
+                                      color: "white",
+                                      padding: "6px 12px",
+                                      borderRadius: "var(--radius-sm)",
+                                      cursor: "pointer",
+                                      fontWeight: 600,
+                                      fontSize: "11px"
+                                    }}
+                                  >
+                                    Reject
+                                  </button>
+                                  <button
+                                    onClick={() => handleApprove(request.id)}
+                                    style={{
+                                      background: "var(--success)",
+                                      border: "none",
+                                      color: "white",
+                                      padding: "6px 12px",
+                                      borderRadius: "var(--radius-sm)",
+                                      cursor: "pointer",
+                                      fontWeight: 600,
+                                      fontSize: "11px"
+                                    }}
+                                  >
+                                    Approve
+                                  </button>
+                                </>
+                              ) : (
+                                <span className="status-badge" style={getStatusStyle(request.status)}>
+                                  {request.status}
+                                </span>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -244,18 +387,18 @@ function LeavesContent() {
                     </table>
                   </div>
                 ) : (
-                  <div className="empty-state">No leaves logged in system.</div>
+                  <div className="empty-state">No leaves logged in registry.</div>
                 )}
               </div>
             </div>
           </div>
         ) : (
           /* ========================================================
-             EMPLOYEE TIME-OFF PAGE
+             EMPLOYEE VIEW - 12 MONTH CALENDAR GRID & HISTORICAL LOG
              ======================================================== */
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-8)" }}>
             
-            <header className="page-header animate-in" style={{ display: "flex", justifySelf: "stretch", justifyContent: "space-between", alignItems: "center" }}>
+            <header className="page-header animate-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <h1 style={{ margin: 0 }}>My Time-Off Requests</h1>
                 <p style={{ color: "var(--text-secondary)", fontSize: "var(--font-sm)", marginTop: "4px" }}>
@@ -267,13 +410,37 @@ function LeavesContent() {
                 className="btn-primary"
                 id="apply-leave-btn"
               >
-                ➕ Apply for Leave
+                NEW
               </button>
             </header>
 
-            <div className="glass-card animate-in animate-in-delay-1" id="leaves-history-card">
+            {/* 12-Month Calendar Grid */}
+            <div className="glass-card animate-in animate-in-delay-1" style={{ padding: "var(--space-6)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-4)" }}>
+                <h2 style={{ margin: 0 }}>Time-Off Leave Calendar</h2>
+                {/* Legenda */}
+                <div style={{ display: "flex", gap: "var(--space-4)", fontSize: "var(--font-xs)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--danger)" }} />
+                    Validated / Approved
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--warning)" }} />
+                    To Approve / Pending
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "rgba(255,255,255,0.1)" }} />
+                    Refused / Rejected
+                  </div>
+                </div>
+              </div>
+              <CalendarYearGrid leaves={leaves} />
+            </div>
+
+            {/* Employee Request History Table */}
+            <div className="glass-card animate-in animate-in-delay-2" id="leaves-history-card">
               <div className="glass-card__header">
-                <h2>My History</h2>
+                <h2>My Applications Log</h2>
                 <span style={{ fontSize: "var(--font-xs)", color: "var(--text-tertiary)" }}>
                   {leaves.length} applications
                 </span>
@@ -294,15 +461,15 @@ function LeavesContent() {
                       </thead>
                       <tbody>
                         {leaves.map((leave) => (
-                          <tr key={leave.id} style={{ borderBottom: "1px solid var(--border-primary)", transition: "background var(--transition-fast)" }} className="content-section">
+                          <tr key={leave.id} style={{ borderBottom: "1px solid var(--border-primary)" }} className="content-section">
                             <td style={{ padding: "var(--space-4) var(--space-6)", fontWeight: 500 }}>
                               {leave.leaveType}
                             </td>
                             <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-secondary)" }}>
-                              {new Date(leave.startDate).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
+                              {new Date(leave.startDate).toLocaleDateString([], { timeZone: "UTC" })}
                             </td>
                             <td style={{ padding: "var(--space-4) var(--space-6)", color: "var(--text-secondary)" }}>
-                              {new Date(leave.endDate).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
+                              {new Date(leave.endDate).toLocaleDateString([], { timeZone: "UTC" })}
                             </td>
                             <td style={{ padding: "var(--space-4) var(--space-6)", fontStyle: "italic", fontSize: "var(--font-sm)", color: "var(--text-tertiary)" }}>
                               {leave.comment || "—"}
@@ -318,10 +485,7 @@ function LeavesContent() {
                     </table>
                   </div>
                 ) : (
-                  <div className="empty-state">
-                    <div className="empty-state__icon">📅</div>
-                    <p className="empty-state__text">No leave requests submitted yet.</p>
-                  </div>
+                  <div className="empty-state">No requests registered.</div>
                 )}
               </div>
             </div>
@@ -329,19 +493,124 @@ function LeavesContent() {
         )}
       </main>
 
-      {/* Apply Leave Modal */}
+      {/* CUSTOM TIME OFF TYPE REQUEST MODAL */}
       {isApplying && (
-        <EditModal
-          title="Apply for Leave"
-          onClose={() => setIsApplying(false)}
-          onSave={handleApplyLeave}
-          fields={[
-            { key: "leaveType", label: "Leave Type", value: "Sick Leave", type: "text" },
-            { key: "startDate", label: "Start Date", value: new Date().toISOString().split("T")[0], type: "date" },
-            { key: "endDate", label: "End Date", value: new Date().toISOString().split("T")[0], type: "date" },
-            { key: "remarks", label: "Reason / Remarks", value: "", type: "text" }
-          ]}
-        />
+        <div className="modal-overlay" onClick={() => setIsApplying(false)}>
+          <form
+            onSubmit={handleApplyLeave}
+            className="modal"
+            style={{ maxWidth: "440px" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal__header">
+              <h3 className="modal__title">Time off Type Request</h3>
+              <button type="button" className="modal__close" onClick={() => setIsApplying(false)}>×</button>
+            </div>
+            
+            <div className="modal__body" style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+              
+              <div className="form-group">
+                <label className="form-label">Employee</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={profileUser?.name || currentUser.name}
+                  disabled
+                  style={{ opacity: 0.7, cursor: "not-allowed" }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Time off Type</label>
+                <select
+                  className="form-input"
+                  value={leaveType}
+                  onChange={(e) => setLeaveType(e.target.value)}
+                  id="leave-type-select"
+                >
+                  <option value="Paid Time off">Paid Time off</option>
+                  <option value="Sick Leave">Sick Leave</option>
+                  <option value="Unpaid Leaves">Unpaid Leaves</option>
+                </select>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
+                <div className="form-group">
+                  <label className="form-label">Start Date</label>
+                  <input
+                    type="date"
+                    className="form-input"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    required
+                    id="leave-start-date"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">End Date</label>
+                  <input
+                    type="date"
+                    className="form-input"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    required
+                    id="leave-end-date"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Allocation (Days Duration)</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={`${durationDays.toFixed(2)} Days`}
+                  disabled
+                  style={{ opacity: 0.7, cursor: "not-allowed", fontWeight: "bold", color: "var(--text-accent)" }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Attachment (For sick leave certificate)</label>
+                <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    onClick={() => {
+                      setAttachmentName("medical_certificate_sealed.pdf");
+                      alert("Certificate selected successfully!");
+                    }}
+                    id="upload-certificate-btn"
+                  >
+                    📤 Upload Certificate
+                  </button>
+                  {attachmentName && (
+                    <span style={{ fontSize: "var(--font-xs)", color: "var(--success)" }}>
+                      ✓ {attachmentName}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Reason / Remarks</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                  placeholder="e.g. Annual summer travel or doctor appointment"
+                />
+              </div>
+
+            </div>
+
+            <div className="modal__footer" style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-3)" }}>
+              <button type="button" className="btn-ghost" onClick={() => setIsApplying(false)}>Discard</button>
+              <button type="submit" className="btn-primary" id="submit-leave-btn">Submit</button>
+            </div>
+          </form>
+        </div>
       )}
     </div>
   );
