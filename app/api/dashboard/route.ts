@@ -48,8 +48,11 @@ export async function POST(request: Request) {
   const date = today()
   try {
     if (data.action === 'check-in') {
-      db.prepare(`INSERT INTO attendance (user_id,date,check_in,status) VALUES (?,?,?,'present')
-        ON CONFLICT(user_id,date) DO UPDATE SET check_in=excluded.check_in, status='present'`).run(user.id, date, timeNow())
+      const checkIn = timeNow()
+      db.transaction(() => {
+        const result = db.prepare('UPDATE attendance SET check_in=?, status=\'present\' WHERE user_id=? AND date=?').run(checkIn, user.id, date)
+        if (!result.changes) db.prepare("INSERT INTO attendance (user_id,date,check_in,status) VALUES (?,?,?,'present')").run(user.id, date, checkIn)
+      })()
     } else if (data.action === 'check-out') {
       db.prepare('UPDATE attendance SET check_out=? WHERE user_id=? AND date=?').run(timeNow(), user.id, date)
     } else if (data.action === 'leave-request') {

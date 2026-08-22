@@ -1,0 +1,48 @@
+import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { z } from 'zod'
+import { readSession } from '@/lib/auth'
+import db from '@/lib/db'
+
+const inputSchema = z.object({ module: z.enum(['Recruitment', 'Performance', 'Assets', 'Expenses']), title: z.string().min(2).max(120).optional(), detail: z.string().max(500).optional(), amount: z.number().int().nonnegative().optional(), userId: z.string().optional(), id: z.number().int().optional(), status: z.enum(['open', 'closed', 'available', 'assigned', 'pending', 'approved', 'rejected']).optional() })
+async function session() { return readSession((await cookies()).get('dayflow_session')?.value) }
+
+export async function GET(request: Request) {
+  const actor = await session(); if (!actor) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const module = new URL(request.url).searchParams.get('module')
+  if (module === 'Payroll') return NextResponse.json({ items: db.prepare(`SELECT u.name, s.basic, s.hra, s.allowances, s.deductions, s.net_pay netPay FROM salaries s JOIN users u ON u.id=s.user_id WHERE u.company_id=? ORDER BY u.name`).all(actor.companyId) })
+  if (module === 'Reports') return NextResponse.json({ items: db.prepare(`SELECT 'Employees' label, COUNT(*) value FROM users WHERE company_id=? UNION ALL SELECT 'Leave requests', COUNT(*) FROM leave_requests l JOIN users u ON u.id=l.user_id WHERE u.company_id=? UNION ALL SELECT 'Expenses', COUNT(*) FROM expenses WHERE company_id=?`).all(actor.companyId, actor.companyId, actor.companyId) })
+  const queries: Record<string, string> = {
+    Recruitment: 'SELECT id, title, department, status, created_at createdAt FROM job_postings WHERE company_id=? ORDER BY created_at DESC',
+    Performance: 'SELECT r.id, r.user_id userId, u.name title, r.rating, r.notes detail, r.review_date createdAt FROM performance_reviews r JOIN users u ON u.id=r.user_id WHERE r.company_id=? ORDER BY r.review_date DESC',
+    Assets: 'SELECT a.id, a.name title, a.status, u.name detail, a.assigned_to assignedTo, a.created_at createdAt FROM assets a LEFT JOIN users u ON u.id=a.assigned_to WHERE a.company_id=? ORDER BY a.created_at DESC',
+    Expenses: 'SELECT e.id, e.description title, e.amount, e.status, u.name detail, e.created_at createdAt FROM expenses e JOIN users u ON u.id=e.user_id WHERE e.company_id=? ORDER BY e.created_at DESC',
+  }
+  return NextResponse.json({ items: queries[module || ''] ? db.prepare(queries[module || '']).all(actor.companyId) : [] })
+}
+
+export async function POST(request: Request) {
+  const actor = await session(); if (!actor) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const parsed = inputSchema.safeParse(await request.json()); if (!parsed.success) return NextResponse.json({ error: 'Please provide valid record details.' }, { status: 400 })
+  const input = parsed.data
+  if (!input.id && !input.title) return NextResponse.json({ error: 'A title or description is required.' }, { status: 400 })
+  const title = input.title || ''
+  if (input.id && input.status) {
+    if (!['admin', 'hr', 'manager'].includes(actor.role)) return NextResponse.json({ error: 'You do not have permission to update records.' }, { status: 403 })
+    const table = input.module === 'Recruitment' ? 'job_postings' : input.module === 'Assets' ? 'assets' : input.module === 'Expenses' ? 'expenses' : ''
+    if (!table) return NextResponse.json({ error: 'Performance reviews can only be edited through the notes action.' }, { status: 400 })
+    const result = db.prepare(`UPDATE ${table} SET status=? WHERE id=? AND company_id=?`).run(input.status, input.id, actor.companyId)
+    return result.changes ? NextResponse.json({ ok: true }) : NextResponse.json({ error: 'Record not found.' }, { status: 404 })
+  }
+  if (input.module === 'Performance' && input.id) {
+    if (!input.detail) return NextResponse.json({ error: 'Performance notes cannot be empty.' }, { status: 400 })
+    const result = db.prepare('UPDATE performance_reviews SET notes=? WHERE id=? AND company_id=? AND user_id=?').run(input.detail, input.id, actor.companyId, actor.id)
+    return result.changes ? NextResponse.json({ ok: true }) : NextResponse.json({ error: 'You can only edit your own performance review.' }, { status: 403 })
+  }
+  if (input.module !== 'Expenses' && input.module !== 'Performance' && !['admin', 'hr', 'manager'].includes(actor.role)) return NextResponse.json({ error: 'You do not have permission to create this record.' }, { status: 403 })
+  if (input.module === 'Recruitment') db.prepare('INSERT INTO job_postings (company_id,title,department) VALUES (?,?,?)').run(actor.companyId, title, input.detail || null)
+  if (input.module === 'Performance') { const targetId = ['admin', 'hr', 'manager'].includes(actor.role) ? input.userId : actor.id; if (!targetId || !input.amount || input.amount < 1 || input.amount > 5 || !db.prepare('SELECT id FROM users WHERE id=? AND company_id=?').get(targetId, actor.companyId)) return NextResponse.json({ error: 'Select an employee and rating from 1 to 5.' }, { status: 400 }); db.prepare('INSERT INTO performance_reviews (company_id,user_id,rating,notes) VALUES (?,?,?,?)').run(actor.companyId, targetId, input.amount, input.detail || null) }
+  if (input.module === 'Assets') db.prepare('INSERT INTO assets (company_id,name,assigned_to) VALUES (?,?,?)').run(actor.companyId, title, input.userId || null)
+  if (input.module === 'Expenses') { if (!input.amount || input.amount < 1) return NextResponse.json({ error: 'Enter an expense amount.' }, { status: 400 }); db.prepare('INSERT INTO expenses (company_id,user_id,description,amount) VALUES (?,?,?,?)').run(actor.companyId, actor.id, title, input.amount) }
+  return NextResponse.json({ ok: true }, { status: 201 })
+}
