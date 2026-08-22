@@ -215,11 +215,11 @@ export default function DashboardPage() {
           cursor: "pointer",
           position: "relative",
           transition: "transform 0.2s, box-shadow 0.2s",
-          border: isEmpHr ? "1px solid rgba(244, 63, 94, 0.4)" : isEmpAdmin ? "1px solid rgba(251, 191, 36, 0.4)" : "1px solid var(--border-primary)"
+          border: isEmpHr ? "1px solid rgba(245, 158, 11, 0.4)" : isEmpAdmin ? "1px solid rgba(244, 63, 94, 0.4)" : "1px solid var(--border-primary)"
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = "translateY(-4px)";
-          e.currentTarget.style.boxShadow = "var(--shadow-md)";
+          e.currentTarget.style.boxShadow = "var(--shadow-glow)";
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = "none";
@@ -234,9 +234,9 @@ export default function DashboardPage() {
               borderRadius: "12px",
               fontSize: "10px",
               fontWeight: 700,
-              background: isEmpAdmin ? "rgba(251, 191, 36, 0.2)" : isEmpHr ? "rgba(244, 63, 94, 0.2)" : "rgba(226, 232, 240, 0.15)",
-              color: isEmpAdmin ? "#fbbf24" : isEmpHr ? "#f43f5e" : "#e2e8f0",
-              border: `1px solid ${isEmpAdmin ? "#fbbf24" : isEmpHr ? "#f43f5e" : "#e2e8f0"}`
+              background: isEmpAdmin ? "rgba(244, 63, 94, 0.2)" : isEmpHr ? "rgba(245, 158, 11, 0.2)" : "rgba(56, 189, 248, 0.2)",
+              color: isEmpAdmin ? "#f43f5e" : isEmpHr ? "#fbbf24" : "#38bdf8",
+              border: `1px solid ${isEmpAdmin ? "#f43f5e" : isEmpHr ? "#fbbf24" : "#38bdf8"}`
             }}
           >
             {isEmpAdmin ? "ADMIN" : isEmpHr ? "HR MANAGER" : "STAFF"}
@@ -374,8 +374,8 @@ export default function DashboardPage() {
                 padding: "var(--space-2) var(--space-4)",
                 background: roleTab === "EMPLOYEE" ? "var(--bg-glass-hover)" : "none",
                 border: "none",
-                borderBottom: roleTab === "EMPLOYEE" ? "2px solid #e2e8f0" : "2px solid transparent",
-                color: roleTab === "EMPLOYEE" ? "#e2e8f0" : "var(--text-secondary)",
+                borderBottom: roleTab === "EMPLOYEE" ? "2px solid #38bdf8" : "2px solid transparent",
+                color: roleTab === "EMPLOYEE" ? "#38bdf8" : "var(--text-secondary)",
                 fontWeight: 600,
                 cursor: "pointer",
                 borderRadius: "var(--radius-sm)"
@@ -390,8 +390,8 @@ export default function DashboardPage() {
                 padding: "var(--space-2) var(--space-4)",
                 background: roleTab === "HR" ? "var(--bg-glass-hover)" : "none",
                 border: "none",
-                borderBottom: roleTab === "HR" ? "2px solid #f43f5e" : "2px solid transparent",
-                color: roleTab === "HR" ? "#f43f5e" : "var(--text-secondary)",
+                borderBottom: roleTab === "HR" ? "2px solid #fbbf24" : "2px solid transparent",
+                color: roleTab === "HR" ? "#fbbf24" : "var(--text-secondary)",
                 fontWeight: 600,
                 cursor: "pointer",
                 borderRadius: "var(--radius-sm)"
@@ -407,8 +407,8 @@ export default function DashboardPage() {
                   padding: "var(--space-2) var(--space-4)",
                   background: roleTab === "ADMIN" ? "var(--bg-glass-hover)" : "none",
                   border: "none",
-                  borderBottom: roleTab === "ADMIN" ? "2px solid #fbbf24" : "2px solid transparent",
-                  color: roleTab === "ADMIN" ? "#fbbf24" : "var(--text-secondary)",
+                  borderBottom: roleTab === "ADMIN" ? "2px solid #f43f5e" : "2px solid transparent",
+                  color: roleTab === "ADMIN" ? "#f43f5e" : "var(--text-secondary)",
                   fontWeight: 600,
                   cursor: "pointer",
                   borderRadius: "var(--radius-sm)"

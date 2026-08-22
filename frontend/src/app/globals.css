@@ -5,45 +5,45 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* ---- Design Tokens — Metallic Burgundy & Pearl Silver Palette ---- */
+/* ---- Design Tokens — Sapphire Pearl & Metallic Gold Palette ---- */
 :root {
   /* Colors */
-  --bg-primary: #120509; /* Deep Metallic Burgundy Black */
-  --bg-secondary: #1e0910; /* Dark Cabernet Burgundy */
-  --bg-tertiary: #2a0c16; /* Satin Wine Container */
-  --bg-card: rgba(42, 12, 22, 0.75); /* Glass Metallic Burgundy */
-  --bg-card-hover: rgba(58, 16, 30, 0.85);
-  --bg-glass: rgba(245, 246, 248, 0.04);
-  --bg-glass-hover: rgba(245, 246, 248, 0.08);
+  --bg-primary: #050b14; /* Deep Night Sapphire */
+  --bg-secondary: #0a1222; /* Midnight Sapphire Navy */
+  --bg-tertiary: #0f1d35; /* Container Sapphire Navy */
+  --bg-card: rgba(15, 29, 53, 0.75); /* Glass Sapphire Navy with Pearl Blur */
+  --bg-card-hover: rgba(22, 42, 75, 0.85);
+  --bg-glass: rgba(240, 249, 255, 0.04);
+  --bg-glass-hover: rgba(240, 249, 255, 0.08);
 
-  --border-primary: rgba(245, 246, 248, 0.12); /* Pearl Silver Shimmer Outline */
-  --border-secondary: rgba(245, 246, 248, 0.2);
-  --border-accent: rgba(225, 29, 72, 0.4); /* Metallic Burgundy Accent Glow */
+  --border-primary: rgba(186, 230, 253, 0.18); /* Pearl Shimmer Outline */
+  --border-secondary: rgba(245, 158, 11, 0.25); /* Metallic Gold Outline */
+  --border-accent: rgba(245, 158, 11, 0.5); /* Metallic Gold Accent Glow */
 
-  --text-primary: #f8fafc; /* Crisp Pearl White */
-  --text-secondary: #cbd5e1; /* Luminous Pearl Silver */
-  --text-tertiary: #8a8d9a; /* Muted Platinum */
-  --text-accent: #fb7185; /* Metallic Burgundy Rose Highlight */
-  --text-link: #fda4af; /* Pearl Silver Rose Link */
+  --text-primary: #f0f9ff; /* Luminous Pearl White */
+  --text-secondary: #bae6fd; /* Sapphire Pearl Glow */
+  --text-tertiary: #7dd3fc; /* Soft Pearl Platinum */
+  --text-accent: #fbbf24; /* Metallic Gold Highlight */
+  --text-link: #fef08a; /* Pearl Gold Link */
 
-  --accent-primary: #be123c; /* Rich Metallic Burgundy */
-  --accent-primary-hover: #e11d48;
-  --accent-gradient: linear-gradient(135deg, #881337 0%, #be123c 50%, #e2e8f0 100%); /* Metallic Burgundy to Pearl Silver Shimmer */
-  --accent-gradient-soft: linear-gradient(135deg, rgba(136, 19, 55, 0.3) 0%, rgba(226, 232, 240, 0.15) 100%);
+  --accent-primary: #f59e0b; /* Rich Metallic Gold */
+  --accent-primary-hover: #d97706;
+  --accent-gradient: linear-gradient(135deg, #0284c7 0%, #38bdf8 40%, #f59e0b 80%, #fbbf24 100%); /* Sapphire Pearl to Metallic Gold Glow */
+  --accent-gradient-soft: linear-gradient(135deg, rgba(2, 132, 199, 0.25) 0%, rgba(245, 158, 11, 0.2) 100%);
 
   --success: #34d399;
   --warning: #fbbf24;
   --danger: #f43f5e;
   --info: #38bdf8;
 
-  --avatar-gradient: linear-gradient(135deg, #881337 0%, #be123c 50%, #cbd5e1 100%);
+  --avatar-gradient: linear-gradient(135deg, #0284c7 0%, #38bdf8 50%, #fbbf24 100%);
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.7);
-  --shadow-glow: 0 0 25px rgba(190, 18, 60, 0.35); /* Burgundy Glow */
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(245, 246, 248, 0.1);
+  /* Shadows & Pearl Glows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.8);
+  --shadow-glow: 0 0 25px rgba(56, 189, 248, 0.35), 0 0 15px rgba(245, 158, 11, 0.25); /* Dual Pearl & Gold Glow */
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(186, 230, 253, 0.15);
 
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -101,20 +101,27 @@ body {
   font-size: var(--font-base);
   line-height: 1.6;
   color: var(--text-primary);
-  background: var(--bg-primary);
+  background-color: var(--bg-primary);
+  background-image: 
+    radial-gradient(rgba(186, 230, 253, 0.08) 1.5px, transparent 1.5px),
+    radial-gradient(ellipse at 15% 15%, rgba(2, 132, 199, 0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 85%, rgba(245, 158, 11, 0.2) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(56, 189, 248, 0.12) 0%, transparent 70%);
+  background-size: 32px 32px, 100% 100%, 100% 100%, 100% 100%;
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Background ambient glow */
+/* Background ambient pearl glow effects */
 body::before {
   content: '';
   position: fixed;
   top: -200px;
   right: -200px;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, rgba(245, 158, 11, 0.06) 40%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -124,9 +131,9 @@ body::after {
   position: fixed;
   bottom: -200px;
   left: -100px;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, rgba(2, 132, 199, 0.08) 50%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
