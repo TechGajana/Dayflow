@@ -5,45 +5,45 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* ---- Design Tokens — Deep Charcoal & Hot Pink ONLY ---- */
+/* ---- Design Tokens — Dark Graphite & Royal Purple ONLY ---- */
 :root {
-  /* Colors — STRICTLY #121212 Charcoal + #EC4899 Hot Pink */
-  --bg-primary: #121212;
-  --bg-secondary: #1a1a1a;
-  --bg-tertiary: #222222;
-  --bg-card: rgba(26, 26, 26, 0.88);
-  --bg-card-hover: rgba(34, 34, 34, 0.92);
+  /* Colors — STRICTLY #111111 Graphite + #7C3AED Royal Purple */
+  --bg-primary: #111111;
+  --bg-secondary: #191919;
+  --bg-tertiary: #212121;
+  --bg-card: rgba(25, 25, 25, 0.88);
+  --bg-card-hover: rgba(33, 33, 33, 0.92);
   --bg-glass: rgba(255, 255, 255, 0.04);
   --bg-glass-hover: rgba(255, 255, 255, 0.08);
 
-  --border-primary: rgba(236, 72, 153, 0.2);
-  --border-secondary: rgba(236, 72, 153, 0.35);
-  --border-accent: rgba(236, 72, 153, 0.6);
+  --border-primary: rgba(124, 58, 237, 0.2);
+  --border-secondary: rgba(124, 58, 237, 0.35);
+  --border-accent: rgba(124, 58, 237, 0.6);
 
   --text-primary: #fafafa;
   --text-secondary: #a3a3a3;
   --text-tertiary: #737373;
-  --text-accent: #ec4899;
-  --text-link: #f472b6;
+  --text-accent: #7c3aed;
+  --text-link: #a78bfa;
 
-  --accent-primary: #ec4899;
-  --accent-primary-hover: #db2777;
-  --accent-gradient: linear-gradient(135deg, #be185d 0%, #ec4899 50%, #f472b6 100%);
-  --accent-gradient-soft: linear-gradient(135deg, rgba(236, 72, 153, 0.25) 0%, rgba(236, 72, 153, 0.08) 100%);
+  --accent-primary: #7c3aed;
+  --accent-primary-hover: #6d28d9;
+  --accent-gradient: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #a78bfa 100%);
+  --accent-gradient-soft: linear-gradient(135deg, rgba(124, 58, 237, 0.25) 0%, rgba(124, 58, 237, 0.08) 100%);
 
-  --success: #ec4899;
-  --warning: #ec4899;
+  --success: #7c3aed;
+  --warning: #7c3aed;
   --danger: #dc2626;
-  --info: #ec4899;
+  --info: #7c3aed;
 
-  --avatar-gradient: linear-gradient(135deg, #9d174d 0%, #ec4899 50%, #f472b6 100%);
+  --avatar-gradient: linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #a78bfa 100%);
 
-  /* Shadows — Pink glow only */
+  /* Shadows — Purple glow only */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.6);
-  --shadow-md: 0 4px 16px rgba(236, 72, 153, 0.2);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(236, 72, 153, 0.25);
-  --shadow-glow: 0 0 25px rgba(236, 72, 153, 0.4);
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(236, 72, 153, 0.1);
+  --shadow-md: 0 4px 16px rgba(124, 58, 237, 0.2);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(124, 58, 237, 0.25);
+  --shadow-glow: 0 0 25px rgba(124, 58, 237, 0.4);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(124, 58, 237, 0.1);
 
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -101,12 +101,12 @@ body {
   font-size: var(--font-base);
   line-height: 1.6;
   color: var(--text-primary);
-  background: #121212;
+  background: #111111;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Hot pink glow — top right */
+/* Royal purple glow — top right */
 body::before {
   content: '';
   position: fixed;
@@ -114,13 +114,13 @@ body::before {
   right: -250px;
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(236, 72, 153, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.12) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
   filter: blur(60px);
 }
 
-/* Hot pink glow — bottom left */
+/* Royal purple glow — bottom left */
 body::after {
   content: '';
   position: fixed;
@@ -128,7 +128,7 @@ body::after {
   left: -150px;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(236, 72, 153, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.08) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
   filter: blur(60px);
