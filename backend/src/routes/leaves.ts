@@ -13,12 +13,12 @@ const getLeaves: RequestHandler = async (req, res, next) => {
       requests = await prisma.leaveRequest.findMany({
         where: { userId: String(userId) },
         orderBy: { createdAt: "desc" },
-        include: { user: { select: { name: true, employeeId: true } } }
+        include: { user: { select: { name: true, employeeId: true, role: true } } }
       });
     } else {
       requests = await prisma.leaveRequest.findMany({
         orderBy: { createdAt: "desc" },
-        include: { user: { select: { name: true, employeeId: true } } }
+        include: { user: { select: { name: true, employeeId: true, role: true } } }
       });
     }
 

@@ -154,6 +154,7 @@ const updateProfile: RequestHandler = async (req, res, next) => {
       workingDaysPerWeek,
       breakTime,
       hrsPerDay,
+      role,
     } = req.body;
 
     if (!userId) {
@@ -188,6 +189,7 @@ const updateProfile: RequestHandler = async (req, res, next) => {
         workingDaysPerWeek: workingDaysPerWeek !== undefined ? parseInt(workingDaysPerWeek) : undefined,
         breakTime: breakTime !== undefined ? parseFloat(breakTime) : undefined,
         hrsPerDay: hrsPerDay !== undefined ? parseFloat(hrsPerDay) : undefined,
+        role,
       },
     });
     res.json(updated);

@@ -47,6 +47,7 @@ function ProfileContent() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordMessage, setPasswordMessage] = useState<{ text: string; isError: boolean } | null>(null);
+  const [role, setRole] = useState("");
   const [isSavingPassword, setIsSavingPassword] = useState(false);
 
   const loadProfile = async () => {
@@ -79,6 +80,7 @@ function ProfileContent() {
       setPanNo(data.panNo || "");
       setUanNo(data.uanNo || "");
       setEmpCode(data.empCode || data.employeeId);
+      setRole(data.role);
 
       // Initialize Salary Info Form
       setMonthWage(data.monthWage || 0);
@@ -115,7 +117,8 @@ function ProfileContent() {
         ifscCode,
         panNo,
         uanNo,
-        empCode
+        empCode,
+        role: role || undefined
       });
       setUser({ ...user, ...updated });
       alert("Private information saved successfully!");

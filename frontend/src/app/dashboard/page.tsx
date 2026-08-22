@@ -99,12 +99,22 @@ export default function DashboardPage() {
 
   const isHr = currentUser.role === "HR";
 
-  // Filter employees by search query
-  const filteredEmployees = employees.filter((emp) =>
-    emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (emp.title && emp.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (emp.department && emp.department.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // Filter employees by search query & role permissions
+  const filteredEmployees = employees.filter((emp) => {
+    // 1. HR can only see/manage EMPLOYEE users
+    if (currentUser.role === "HR" && emp.role !== "EMPLOYEE") return false;
+    
+    // 2. Regular employees (Staff) can see other Staff and HR managers, but NOT system Admins
+    if (currentUser.role === "EMPLOYEE" && emp.role === "ADMIN") return false;
+    
+    // 3. Admin can see everyone
+    
+    return (
+      emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (emp.title && emp.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (emp.department && emp.department.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  });
 
   // Helper to determine status dot of each employee
   const getEmployeeStatus = (empId: string) => {

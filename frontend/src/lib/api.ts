@@ -40,6 +40,7 @@ export interface LeaveRequest {
   user?: {
     name: string;
     employeeId: string;
+    role: string;
   };
 }
 

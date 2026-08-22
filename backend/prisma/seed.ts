@@ -19,6 +19,42 @@ async function main() {
 
   const hashedPassword = await bcrypt.hash("1234567890", 10);
 
+  // 0. Create System Admin
+  const adminUser = await prisma.user.create({
+    data: {
+      employeeId: "ADM001",
+      name: "System Admin",
+      email: "admin@dayflow.io",
+      password: hashedPassword,
+      role: "ADMIN",
+      mobile: "+1 (555) 000-0000",
+      company: "Dayflow Technologies",
+      department: "IT Infrastructure",
+      manager: "Board of Directors",
+      location: "San Francisco, CA",
+      title: "System Administrator",
+      dob: new Date("1985-01-01"),
+      address: "Admin Center, San Francisco, CA",
+      nationality: "American",
+      personalEmail: "admin.personal@dayflow.io",
+      gender: "Male",
+      maritalStatus: "Single",
+      accountNumber: "000000000000",
+      bankName: "Federal Bank",
+      ifscCode: "FEDR0000001",
+      panNo: "ADM0000001",
+      uanNo: "000000000001",
+      empCode: "ADM001",
+      monthWage: 12000.0,
+      workingDaysPerWeek: 5,
+      breakTime: 1.0,
+      hrsPerDay: 8.0,
+      about: "System Administrator responsible for HRMS configurations and user access provisioning.",
+      jobLove: "I love securing systems and provisioning workspace access.",
+      hobbies: "Coding, cybersecurity research, retro gaming."
+    }
+  });
+
   // 1. Create HR Officer
   const hrUser = await prisma.user.create({
     data: {

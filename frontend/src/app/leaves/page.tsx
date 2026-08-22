@@ -138,7 +138,7 @@ function LeavesContent() {
       if (!storedUser) return;
       const sess = JSON.parse(storedUser);
 
-      if (sess.role === "HR") {
+      if (sess.role === "HR" || sess.role === "ADMIN") {
         const leavesData = await fetchLeaves();
         setLeaves(leavesData);
       } else {
@@ -234,7 +234,7 @@ function LeavesContent() {
     );
   }
 
-  const isHr = currentUser.role === "HR";
+  const isHr = currentUser.role === "HR" || currentUser.role === "ADMIN";
 
   // Calculate available days (Paid quota = 24 base, Sick quota = 7 base)
   const approvedPaidLeaves = leaves.filter((l) => l.leaveType === "Paid Time off" && l.status === "APPROVED");
@@ -246,8 +246,11 @@ function LeavesContent() {
   const paidDaysAvailable = Math.max(0, 24 - paidDaysUsed);
   const sickDaysAvailable = Math.max(0, 7 - sickDaysUsed);
 
-  // Filter leave requests for search query
+  // Filter leave requests for search query & role permission
   const filteredLeaves = leaves.filter((l) => {
+    // HR can only see leave requests of regular employees
+    if (currentUser.role === "HR" && l.user?.role !== "EMPLOYEE") return false;
+
     if (!searchQuery) return true;
     return (
       l.user?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
