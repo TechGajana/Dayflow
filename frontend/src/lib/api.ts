@@ -294,3 +294,24 @@ export async function rejectLeave(id: string, comment?: string): Promise<LeaveRe
   if (!response.ok) throw new Error("Failed to reject leave");
   return response.json();
 }
+
+export async function createEmployee(data: {
+  hrUserId: string;
+  name: string;
+  email: string;
+  mobile?: string;
+  department?: string;
+  title?: string;
+  basicSalary?: number;
+}): Promise<{ employee: User; temporaryPassword?: string }> {
+  const response = await fetch(`${API_BASE_URL}/profile/employee`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Failed to create employee");
+  }
+  return response.json();
+}

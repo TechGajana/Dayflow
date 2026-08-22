@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import EditModal from "@/components/EditModal";
 import {
   fetchTodayAttendance,
   checkIn as apiCheckIn,
@@ -12,6 +13,7 @@ import {
   rejectLeave,
   fetchAllProfiles,
   fetchAttendance,
+  createEmployee,
   UserBrief,
   Attendance,
   LeaveRequest
@@ -32,6 +34,14 @@ export default function DashboardPage() {
   const [allAttendance, setAllAttendance] = useState<Attendance[]>([]);
   const [allLeaves, setAllLeaves] = useState<LeaveRequest[]>([]);
   const [hrComment, setHrComment] = useState("");
+
+  // Add Employee Form State
+  const [isAddingEmployee, setIsAddingEmployee] = useState(false);
+  const [createdEmployeeInfo, setCreatedEmployeeInfo] = useState<{
+    loginId: string;
+    temporaryPassword?: string;
+    name: string;
+  } | null>(null);
 
   // Load User and Metrics
   useEffect(() => {
@@ -140,6 +150,34 @@ export default function DashboardPage() {
     }
   };
 
+  const handleCreateEmployee = async (formData: Record<string, string>) => {
+    if (!currentUser) return;
+    try {
+      const result = await createEmployee({
+        hrUserId: currentUser.id,
+        name: formData.name,
+        email: formData.email,
+        mobile: formData.mobile || undefined,
+        department: formData.department || undefined,
+        title: formData.title || undefined,
+        basicSalary: parseFloat(formData.basicSalary) || undefined
+      });
+
+      setIsAddingEmployee(false);
+      setCreatedEmployeeInfo({
+        loginId: result.employee.employeeId,
+        temporaryPassword: result.temporaryPassword,
+        name: result.employee.name
+      });
+
+      // Reload HR employee list context
+      const emps = await fetchAllProfiles();
+      setEmployees(emps);
+    } catch (err: any) {
+      alert(err.message || "Failed to create employee");
+    }
+  };
+
   if (loading || !currentUser) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", color: "var(--text-secondary)" }}>
@@ -172,9 +210,20 @@ export default function DashboardPage() {
               Welcome back, {currentUser.name}. You are logged in as {isHr ? "HR Manager" : "Employee"}.
             </p>
           </div>
-          <div className="status-badge">
-            <span className="status-badge__dot" />
-            Live
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
+            {isHr && (
+              <button
+                onClick={() => setIsAddingEmployee(true)}
+                className="btn-primary animate-in"
+                id="add-employee-btn"
+              >
+                ➕ Add New Employee
+              </button>
+            )}
+            <div className="status-badge">
+              <span className="status-badge__dot" />
+              Live
+            </div>
           </div>
         </header>
 
@@ -432,6 +481,59 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* HR Add Employee Modal */}
+      {isAddingEmployee && (
+        <EditModal
+          title="Add New Employee"
+          onClose={() => setIsAddingEmployee(false)}
+          onSave={handleCreateEmployee}
+          fields={[
+            { key: "name", label: "Full Name", value: "", type: "text" },
+            { key: "email", label: "Email Address", value: "", type: "text" },
+            { key: "mobile", label: "Phone / Mobile", value: "", type: "text" },
+            { key: "department", label: "Department", value: "", type: "text" },
+            { key: "title", label: "Job Title / Designation", value: "", type: "text" },
+            { key: "basicSalary", label: "Basic Salary ($)", value: "5000", type: "text" }
+          ]}
+        />
+      )}
+
+      {/* Success Block Modal showing generated credentials */}
+      {createdEmployeeInfo && (
+        <div className="modal-overlay" onClick={() => setCreatedEmployeeInfo(null)}>
+          <div className="modal" style={{ maxWidth: "440px" }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal__header">
+              <h3 className="modal__title" style={{ color: "var(--success)" }}>🎉 Employee Registered!</h3>
+              <button className="modal__close" onClick={() => setCreatedEmployeeInfo(null)}>×</button>
+            </div>
+            <div className="modal__body" style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+              <p style={{ color: "var(--text-secondary)", fontSize: "var(--font-sm)" }}>
+                The new employee profile has been created successfully. Share these login credentials for their first sign-in:
+              </p>
+              
+              <div style={{ padding: "var(--space-4)", background: "var(--bg-glass)", border: "1px solid var(--border-primary)", borderRadius: "var(--radius-md)", display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
+                <div>
+                  <strong>Employee:</strong> {createdEmployeeInfo.name}
+                </div>
+                <div>
+                  <strong>Login ID:</strong> <code style={{ color: "var(--text-accent)", fontSize: "var(--font-md)", fontWeight: 700 }}>{createdEmployeeInfo.loginId}</code>
+                </div>
+                <div>
+                  <strong>Temporary Password:</strong> <code style={{ color: "var(--warning)", fontSize: "var(--font-md)", fontWeight: 700 }}>{createdEmployeeInfo.temporaryPassword}</code>
+                </div>
+              </div>
+
+              <div style={{ fontSize: "var(--font-xs)", color: "var(--text-tertiary)", fontStyle: "italic" }}>
+                💡 Note: They can sign in using either this generated Login ID or their email, and will be able to change their password once logged in.
+              </div>
+            </div>
+            <div className="modal__footer">
+              <button className="btn-primary" onClick={() => setCreatedEmployeeInfo(null)}>Got It</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

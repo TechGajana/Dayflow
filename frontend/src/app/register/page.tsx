@@ -6,18 +6,27 @@ import { register } from "@/lib/api";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [employeeId, setEmployeeId] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("EMPLOYEE");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!employeeId || !name || !email || !password) {
-      setError("All fields are required");
+    if (!companyName || !name || !email || !password || !confirmPassword) {
+      setError("Please fill in all required fields");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
       return;
     }
 
@@ -26,13 +35,12 @@ export default function RegisterPage() {
 
     try {
       const user = await register({
-        employeeId,
+        companyName,
         name,
         email,
+        mobile,
         password,
-        role
       });
-      // Store user in localstorage and redirect to dashboard
       localStorage.setItem("dayflow_user", JSON.stringify(user));
       router.push("/dashboard");
     } catch (err: any) {
@@ -57,7 +65,7 @@ export default function RegisterPage() {
         className="glass-card animate-in"
         style={{
           width: "100%",
-          maxWidth: "400px",
+          maxWidth: "440px",
           padding: "var(--space-8)"
         }}
       >
@@ -66,7 +74,7 @@ export default function RegisterPage() {
             Dayflow
           </h1>
           <p style={{ color: "var(--text-secondary)", fontSize: "var(--font-sm)", marginTop: "4px" }}>
-            Create an HRMS employee account
+            Create your HRMS organization account
           </p>
         </div>
 
@@ -88,19 +96,32 @@ export default function RegisterPage() {
         )}
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+          {/* Company Name with Upload Logo */}
           <div className="form-group">
-            <label className="form-label" htmlFor="empid-input">
-              Employee ID
+            <label className="form-label" htmlFor="company-input">
+              Company Name
             </label>
-            <input
-              id="empid-input"
-              type="text"
-              className="form-input"
-              value={employeeId}
-              onChange={(e) => setEmployeeId(e.target.value)}
-              placeholder="e.g. EMP102"
-              required
-            />
+            <div style={{ display: "flex", gap: "var(--space-2)" }}>
+              <input
+                id="company-input"
+                type="text"
+                className="form-input"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder="e.g. Odoo India"
+                required
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                className="btn-ghost"
+                title="Upload Company Logo"
+                style={{ width: "42px", height: "42px", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
+                onClick={() => alert("Mock Logo Upload: Image selected.")}
+              >
+                📤
+              </button>
+            </div>
           </div>
 
           <div className="form-group">
@@ -134,33 +155,89 @@ export default function RegisterPage() {
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="password-input">
-              Password
+            <label className="form-label" htmlFor="mobile-input">
+              Phone Number
             </label>
             <input
-              id="password-input"
-              type="password"
+              id="mobile-input"
+              type="tel"
               className="form-input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value)}
+              placeholder="+1 (555) 000-0000"
             />
           </div>
 
+          {/* Password with Eye Toggle */}
           <div className="form-group">
-            <label className="form-label" htmlFor="role-select">
-              Organization Role
+            <label className="form-label" htmlFor="password-input">
+              Password
             </label>
-            <select
-              id="role-select"
-              className="form-input"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-            >
-              <option value="EMPLOYEE">Regular Employee</option>
-              <option value="HR">HR Officer / Admin</option>
-            </select>
+            <div style={{ position: "relative" }}>
+              <input
+                id="password-input"
+                type={showPassword ? "text" : "password"}
+                className="form-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                style={{ paddingRight: "40px" }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: "absolute",
+                  right: "10px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--text-secondary)",
+                  fontSize: "14px"
+                }}
+              >
+                {showPassword ? "👁️" : "👁️‍🗨️"}
+              </button>
+            </div>
+          </div>
+
+          {/* Confirm Password with Eye Toggle */}
+          <div className="form-group">
+            <label className="form-label" htmlFor="confirm-password-input">
+              Confirm Password
+            </label>
+            <div style={{ position: "relative" }}>
+              <input
+                id="confirm-password-input"
+                type={showConfirmPassword ? "text" : "password"}
+                className="form-input"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                style={{ paddingRight: "40px" }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={{
+                  position: "absolute",
+                  right: "10px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--text-secondary)",
+                  fontSize: "14px"
+                }}
+              >
+                {showConfirmPassword ? "👁️" : "👁️‍🗨️"}
+              </button>
+            </div>
           </div>
 
           <button
@@ -170,14 +247,14 @@ export default function RegisterPage() {
             disabled={loading}
             id="register-submit-btn"
           >
-            {loading ? "Registering..." : "Create Account"}
+            {loading ? "Registering..." : "Sign Up"}
           </button>
         </form>
 
         <div style={{ textAlign: "center", marginTop: "var(--space-6)", fontSize: "var(--font-xs)", color: "var(--text-secondary)" }}>
           Already have an account?{" "}
           <a href="/login" style={{ fontWeight: 600 }}>
-            Sign In instead
+            Sign In
           </a>
         </div>
       </div>

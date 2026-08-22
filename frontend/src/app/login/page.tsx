@@ -6,14 +6,15 @@ import { login } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!loginId || !password) {
       setError("Please fill in all fields");
       return;
     }
@@ -22,7 +23,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const user = await login(email, password);
+      const user = await login(loginId, password);
       localStorage.setItem("dayflow_user", JSON.stringify(user));
       router.push("/dashboard");
     } catch (err: any) {
@@ -79,16 +80,16 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
           <div className="form-group">
-            <label className="form-label" htmlFor="email-input">
-              Email Address
+            <label className="form-label" htmlFor="login-id-input">
+              Login ID / Email
             </label>
             <input
-              id="email-input"
-              type="email"
+              id="login-id-input"
+              type="text"
               className="form-input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="alexandra.chen@dayflow.io"
+              value={loginId}
+              onChange={(e) => setLoginId(e.target.value)}
+              placeholder="e.g. OIJODO20220001 or email@domain.com"
               required
             />
           </div>
@@ -97,15 +98,35 @@ export default function LoginPage() {
             <label className="form-label" htmlFor="password-input">
               Password
             </label>
-            <input
-              id="password-input"
-              type="password"
-              className="form-input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-            />
+            <div style={{ position: "relative" }}>
+              <input
+                id="password-input"
+                type={showPassword ? "text" : "password"}
+                className="form-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                style={{ paddingRight: "40px" }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: "absolute",
+                  right: "10px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--text-secondary)",
+                  fontSize: "14px"
+                }}
+              >
+                {showPassword ? "👁️" : "👁️‍🗨️"}
+              </button>
+            </div>
           </div>
 
           <button
@@ -115,14 +136,14 @@ export default function LoginPage() {
             disabled={loading}
             id="login-submit-btn"
           >
-            {loading ? "Authenticating..." : "Sign In"}
+            {loading ? "Authenticating..." : "SIGN IN"}
           </button>
         </form>
 
         <div style={{ textAlign: "center", marginTop: "var(--space-6)", fontSize: "var(--font-xs)", color: "var(--text-secondary)" }}>
           Don&apos;t have an account?{" "}
           <a href="/register" style={{ fontWeight: 600 }}>
-            Register here
+            Sign Up
           </a>
         </div>
       </div>

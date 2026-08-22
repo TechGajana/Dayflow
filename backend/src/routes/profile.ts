@@ -1,5 +1,7 @@
 import { Router, Request, Response, RequestHandler } from "express";
+import bcrypt from "bcryptjs";
 import { prisma } from "../lib/prisma.js";
+import { generateEmployeeId } from "../lib/idGenerator.js";
 
 const router = Router();
 
@@ -49,6 +51,74 @@ const getAllProfiles: RequestHandler = async (_req, res, next) => {
       }
     });
     res.json(users);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /api/profile/employee - Create new employee user (HR/Admin only)
+const createEmployee: RequestHandler = async (req, res, next) => {
+  try {
+    const { hrUserId, name, email, mobile, department, title, basicSalary, allowance, deductions } = req.body;
+
+    if (!hrUserId || !name || !email) {
+      res.status(400).json({ error: "HR User ID, Employee Name, and Email are required" });
+      return;
+    }
+
+    // Find HR user to get the company name
+    const hrUser = await prisma.user.findUnique({
+      where: { id: hrUserId }
+    });
+
+    if (!hrUser || hrUser.role !== "HR") {
+      res.status(403).json({ error: "Unauthorized. Only HR Managers can create employees." });
+      return;
+    }
+
+    const companyName = hrUser.company || "Dayflow Technologies";
+    const joinDate = new Date();
+
+    // Check if email already registered
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      res.status(400).json({ error: "Email is already registered" });
+      return;
+    }
+
+    // Auto-generate employee ID
+    const employeeId = await generateEmployeeId(companyName, name, joinDate);
+
+    // Auto-generate temporary password (e.g. DF + 4 random digits)
+    const randomDigits = Math.floor(1000 + Math.random() * 9000).toString();
+    const temporaryPassword = `DF${randomDigits}`;
+    const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+
+    const newEmployee = await prisma.user.create({
+      data: {
+        employeeId,
+        name,
+        email,
+        password: hashedPassword,
+        role: "EMPLOYEE",
+        mobile: mobile || null,
+        company: companyName,
+        department: department || null,
+        title: title || null,
+        joinDate,
+        basicSalary: basicSalary !== undefined ? parseFloat(basicSalary) : 5000.0,
+        allowance: allowance !== undefined ? parseFloat(allowance) : 400.0,
+        deductions: deductions !== undefined ? parseFloat(deductions) : 150.0,
+        about: "New employee profile.",
+        jobLove: "I love contributing my skills to the product engineering lifecycle.",
+        hobbies: "Exploring tech, gaming.",
+      }
+    });
+
+    res.status(201).json({
+      employee: newEmployee,
+      temporaryPassword // Return plain password for HR manager to copy/share
+    });
   } catch (error) {
     next(error);
   }
@@ -122,6 +192,7 @@ const updateAbout: RequestHandler = async (req, res, next) => {
 
 router.get("/", getProfile);
 router.get("/all", getAllProfiles);
+router.post("/employee", createEmployee);
 router.put("/", updateProfile);
 router.put("/about", updateAbout);
 
