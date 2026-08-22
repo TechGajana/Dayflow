@@ -10,8 +10,15 @@ async function session() { return readSession((await cookies()).get('dayflow_ses
 export async function GET(request: Request) {
   const actor = await session(); if (!actor) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const module = new URL(request.url).searchParams.get('module')
-  if (module === 'Payroll') { const items = actor.role === 'admin' ? db.prepare(`SELECT u.id, u.name, s.basic, s.hra, s.allowances, s.deductions, s.net_pay netPay FROM salaries s JOIN users u ON u.id=s.user_id WHERE u.company_id=? ORDER BY u.name`).all(actor.companyId) : db.prepare(`SELECT u.id, u.name, s.basic, s.hra, s.allowances, s.deductions, s.net_pay netPay FROM salaries s JOIN users u ON u.id=s.user_id WHERE u.id=?`).all(actor.id); return NextResponse.json({ items }) }
-  if (module === 'Reports') return NextResponse.json({ items: db.prepare(`SELECT 'Employees' label, COUNT(*) value FROM users WHERE company_id=? UNION ALL SELECT 'Leave requests', COUNT(*) FROM leave_requests l JOIN users u ON u.id=l.user_id WHERE u.company_id=? UNION ALL SELECT 'Expenses', COUNT(*) FROM expenses WHERE company_id=?`).all(actor.companyId, actor.companyId, actor.companyId) })
+  if (module === 'Payroll') { const items = ['admin', 'hr'].includes(actor.role) ? db.prepare(`SELECT u.id, u.name, s.basic, s.hra, s.allowances, s.deductions, s.net_pay netPay FROM salaries s JOIN users u ON u.id=s.user_id WHERE u.company_id=? ORDER BY u.name`).all(actor.companyId) : db.prepare(`SELECT u.id, u.name, s.basic, s.hra, s.allowances, s.deductions, s.net_pay netPay FROM salaries s JOIN users u ON u.id=s.user_id WHERE u.id=?`).all(actor.id); return NextResponse.json({ items }) }
+  if (module === 'Reports') {
+    const totals = db.prepare(`SELECT 'Employees' label, COUNT(*) value FROM users WHERE company_id=? UNION ALL SELECT 'Leave requests', COUNT(*) FROM leave_requests l JOIN users u ON u.id=l.user_id WHERE u.company_id=? UNION ALL SELECT 'Expenses', COUNT(*) FROM expenses WHERE company_id=?`).all(actor.companyId, actor.companyId, actor.companyId)
+    const payroll = db.prepare('SELECT COALESCE(SUM(s.net_pay),0) total FROM salaries s JOIN users u ON u.id=s.user_id WHERE u.company_id=?').get(actor.companyId)
+    const attendance = db.prepare(`SELECT date label, SUM(CASE WHEN check_in IS NOT NULL THEN 1 ELSE 0 END) value FROM attendance WHERE user_id IN (SELECT id FROM users WHERE company_id=?) AND date >= date('now','-6 day') GROUP BY date ORDER BY date`).all(actor.companyId)
+    const leaves = db.prepare(`SELECT status label, COUNT(*) value FROM leave_requests l JOIN users u ON u.id=l.user_id WHERE u.company_id=? GROUP BY status`).all(actor.companyId)
+    const expenses = db.prepare('SELECT status label, COALESCE(SUM(amount),0) value FROM expenses WHERE company_id=? GROUP BY status').all(actor.companyId)
+    return NextResponse.json({ items: totals, payroll, attendance, leaves, expenses })
+  }
   const queries: Record<string, string> = {
     Recruitment: 'SELECT id, title, department, status, created_at createdAt FROM job_postings WHERE company_id=? ORDER BY created_at DESC',
     Performance: 'SELECT r.id, r.user_id userId, u.name title, r.rating, r.notes detail, r.review_date createdAt FROM performance_reviews r JOIN users u ON u.id=r.user_id WHERE r.company_id=? ORDER BY r.review_date DESC',
