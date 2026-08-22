@@ -5,45 +5,50 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* ---- Design Tokens — Dark Graphite & Royal Purple ONLY ---- */
+/* ---- Design Tokens — Custom Palette ---- */
 :root {
-  /* Colors — STRICTLY #111111 Graphite + #7C3AED Royal Purple */
-  --bg-primary: #111111;
-  --bg-secondary: #191919;
-  --bg-tertiary: #212121;
-  --bg-card: rgba(25, 25, 25, 0.88);
-  --bg-card-hover: rgba(33, 33, 33, 0.92);
+  /* Backgrounds */
+  --bg-primary: #121212;       /* Deep Charcoal — Page body */
+  --bg-secondary: #1e1e2e;    /* Slate — Navbar / Header */
+  --bg-tertiary: #252535;      /* Lighter Slate — Input fields / Containers */
+  --bg-card: rgba(30, 30, 46, 0.88);  /* Glass Slate — Cards */
+  --bg-card-hover: rgba(37, 37, 53, 0.92);
   --bg-glass: rgba(255, 255, 255, 0.04);
   --bg-glass-hover: rgba(255, 255, 255, 0.08);
 
-  --border-primary: rgba(124, 58, 237, 0.2);
-  --border-secondary: rgba(124, 58, 237, 0.35);
-  --border-accent: rgba(124, 58, 237, 0.6);
+  /* Borders — Rose Red tinted */
+  --border-primary: rgba(244, 63, 94, 0.2);
+  --border-secondary: rgba(244, 63, 94, 0.35);
+  --border-accent: rgba(244, 63, 94, 0.6);
 
-  --text-primary: #fafafa;
-  --text-secondary: #a3a3a3;
-  --text-tertiary: #737373;
-  --text-accent: #7c3aed;
-  --text-link: #a78bfa;
+  /* Text */
+  --text-primary: #c4b5fd;     /* Lavender — Profile name / Headings */
+  --text-secondary: #c7d2fe;   /* Lavender Silver — Role / Subtitles */
+  --text-tertiary: #737373;    /* Dim Gray — Labels / Hints */
+  --text-accent: #f43f5e;      /* Rose Red — Highlights / Badges */
+  --text-link: #fbbf24;        /* Bright Gold — Links */
 
-  --accent-primary: #7c3aed;
-  --accent-primary-hover: #6d28d9;
-  --accent-gradient: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #a78bfa 100%);
-  --accent-gradient-soft: linear-gradient(135deg, rgba(124, 58, 237, 0.25) 0%, rgba(124, 58, 237, 0.08) 100%);
+  /* Accent — Rose Red */
+  --accent-primary: #f43f5e;
+  --accent-primary-hover: #e11d48;
+  --accent-gradient: linear-gradient(135deg, #be123c 0%, #f43f5e 50%, #fb7185 100%);
+  --accent-gradient-soft: linear-gradient(135deg, rgba(244, 63, 94, 0.25) 0%, rgba(244, 63, 94, 0.08) 100%);
 
-  --success: #7c3aed;
-  --warning: #7c3aed;
+  /* Status */
+  --success: #34d399;
+  --warning: #fbbf24;
   --danger: #dc2626;
-  --info: #7c3aed;
+  --info: #38bdf8;
 
-  --avatar-gradient: linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #a78bfa 100%);
+  /* Avatar — Rose Red to Purple */
+  --avatar-gradient: linear-gradient(135deg, #f43f5e 0%, #a855f7 50%, #7c3aed 100%);
 
-  /* Shadows — Purple glow only */
+  /* Shadows — Rose Red glow */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.6);
-  --shadow-md: 0 4px 16px rgba(124, 58, 237, 0.2);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(124, 58, 237, 0.25);
-  --shadow-glow: 0 0 25px rgba(124, 58, 237, 0.4);
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(124, 58, 237, 0.1);
+  --shadow-md: 0 4px 16px rgba(244, 63, 94, 0.2);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 63, 94, 0.25);
+  --shadow-glow: 0 0 25px rgba(244, 63, 94, 0.4);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(244, 63, 94, 0.1);
 
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -101,12 +106,12 @@ body {
   font-size: var(--font-base);
   line-height: 1.6;
   color: var(--text-primary);
-  background: #111111;
+  background: #121212;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Royal purple glow — top right */
+/* Rose Red glow — top right */
 body::before {
   content: '';
   position: fixed;
@@ -114,13 +119,13 @@ body::before {
   right: -250px;
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(124, 58, 237, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(244, 63, 94, 0.1) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
   filter: blur(60px);
 }
 
-/* Royal purple glow — bottom left */
+/* Rose Red glow — bottom left */
 body::after {
   content: '';
   position: fixed;
@@ -128,7 +133,7 @@ body::after {
   left: -150px;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(124, 58, 237, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(244, 63, 94, 0.07) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
   filter: blur(60px);
