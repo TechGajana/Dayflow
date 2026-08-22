@@ -5,45 +5,45 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* ---- Design Tokens — Deep Ocean Teal & Warm Rose Gold ---- */
+/* ---- Design Tokens — Pure Black & Amber Gold ONLY ---- */
 :root {
-  /* Colors — Only TWO tones: Teal + Rose Gold */
-  --bg-primary: #021a1a; /* Deep Ocean Teal Black */
-  --bg-secondary: #042f2e; /* Dark Teal Header */
-  --bg-tertiary: #064e3b; /* Rich Emerald Teal Container */
-  --bg-card: rgba(6, 78, 59, 0.6); /* Glass Teal */
-  --bg-card-hover: rgba(13, 107, 84, 0.7);
-  --bg-glass: rgba(255, 255, 255, 0.05);
-  --bg-glass-hover: rgba(255, 255, 255, 0.09);
+  /* Colors — STRICTLY #0A0A0A Black + #F59E0B Amber Gold */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #141414;
+  --bg-tertiary: #1a1a1a;
+  --bg-card: rgba(20, 20, 20, 0.85);
+  --bg-card-hover: rgba(30, 30, 30, 0.9);
+  --bg-glass: rgba(255, 255, 255, 0.04);
+  --bg-glass-hover: rgba(255, 255, 255, 0.08);
 
-  --border-primary: rgba(20, 184, 166, 0.3); /* Soft Teal Glow */
-  --border-secondary: rgba(251, 113, 133, 0.3); /* Rose Gold Blush Glow */
-  --border-accent: rgba(251, 113, 133, 0.55);
+  --border-primary: rgba(245, 158, 11, 0.2);
+  --border-secondary: rgba(245, 158, 11, 0.35);
+  --border-accent: rgba(245, 158, 11, 0.6);
 
-  --text-primary: #f0fdfa; /* Luminous Teal White */
-  --text-secondary: #99f6e4; /* Light Teal Mint */
-  --text-tertiary: #5eead4; /* Vivid Teal */
-  --text-accent: #fb7185; /* Warm Rose Gold Highlight */
-  --text-link: #fda4af; /* Soft Rose Gold Link */
+  --text-primary: #fafafa;
+  --text-secondary: #a3a3a3;
+  --text-tertiary: #737373;
+  --text-accent: #f59e0b;
+  --text-link: #fbbf24;
 
-  --accent-primary: #14b8a6; /* Hero Accent: Vivid Ocean Teal */
-  --accent-primary-hover: #0d9488;
-  --accent-gradient: linear-gradient(135deg, #0f766e 0%, #14b8a6 50%, #fb7185 100%); /* Deep Teal → Vivid Teal → Warm Rose Gold */
-  --accent-gradient-soft: linear-gradient(135deg, rgba(20, 184, 166, 0.3) 0%, rgba(251, 113, 133, 0.2) 100%);
+  --accent-primary: #f59e0b;
+  --accent-primary-hover: #d97706;
+  --accent-gradient: linear-gradient(135deg, #b45309 0%, #f59e0b 50%, #fbbf24 100%);
+  --accent-gradient-soft: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(245, 158, 11, 0.08) 100%);
 
-  --success: #34d399;
-  --warning: #fbbf24;
-  --danger: #f43f5e;
-  --info: #38bdf8;
+  --success: #f59e0b;
+  --warning: #f59e0b;
+  --danger: #dc2626;
+  --info: #f59e0b;
 
-  --avatar-gradient: linear-gradient(135deg, #0f766e 0%, #14b8a6 50%, #fb7185 100%);
+  --avatar-gradient: linear-gradient(135deg, #92400e 0%, #f59e0b 50%, #fbbf24 100%);
 
-  /* Teal & Rose Gold Glows */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 18px rgba(20, 184, 166, 0.3);
-  --shadow-lg: 0 8px 36px rgba(2, 26, 26, 0.9), 0 0 25px rgba(20, 184, 166, 0.35);
-  --shadow-glow: 0 0 30px rgba(20, 184, 166, 0.45), 0 0 18px rgba(251, 113, 133, 0.3);
-  --shadow-card: 0 4px 28px rgba(2, 26, 26, 0.6), inset 0 1px 0 rgba(153, 246, 228, 0.15);
+  /* Shadows — Gold glow only */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 4px 16px rgba(245, 158, 11, 0.2);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(245, 158, 11, 0.25);
+  --shadow-glow: 0 0 25px rgba(245, 158, 11, 0.4);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(245, 158, 11, 0.1);
 
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -101,42 +101,37 @@ body {
   font-size: var(--font-base);
   line-height: 1.6;
   color: var(--text-primary);
-  background-color: var(--bg-primary);
-  background-image:
-    radial-gradient(rgba(153, 246, 228, 0.1) 1px, transparent 1px),
-    radial-gradient(circle at 20% 30%, rgba(20, 184, 166, 0.3) 0%, transparent 55%),
-    radial-gradient(circle at 80% 70%, rgba(251, 113, 133, 0.2) 0%, transparent 55%);
-  background-size: 28px 28px, 100% 100%, 100% 100%;
-  background-attachment: fixed;
+  background: #0a0a0a;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Ambient teal & rose gold glow orbs */
+/* Single amber gold glow — top right */
 body::before {
   content: '';
   position: fixed;
-  top: -220px;
-  right: -220px;
-  width: 700px;
-  height: 700px;
-  background: radial-gradient(circle, rgba(20, 184, 166, 0.2) 0%, transparent 70%);
+  top: -250px;
+  right: -250px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
-  filter: blur(50px);
+  filter: blur(60px);
 }
 
+/* Single amber gold glow — bottom left */
 body::after {
   content: '';
   position: fixed;
-  bottom: -220px;
-  left: -120px;
-  width: 650px;
-  height: 650px;
-  background: radial-gradient(circle, rgba(251, 113, 133, 0.18) 0%, transparent 70%);
+  bottom: -250px;
+  left: -150px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
-  filter: blur(50px);
+  filter: blur(60px);
 }
 
 a {
