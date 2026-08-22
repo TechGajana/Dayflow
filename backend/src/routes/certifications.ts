@@ -31,7 +31,7 @@ const addCertification: RequestHandler = async (req, res, next) => {
 const deleteCertification: RequestHandler = async (req, res, next) => {
   try {
     const { id } = req.params;
-    await prisma.certification.delete({
+    await prisma.certification.deleteMany({
       where: { id },
     });
     res.status(204).end();

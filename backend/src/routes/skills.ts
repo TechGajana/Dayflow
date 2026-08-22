@@ -29,7 +29,7 @@ const addSkill: RequestHandler = async (req, res, next) => {
 const deleteSkill: RequestHandler = async (req, res, next) => {
   try {
     const { id } = req.params;
-    await prisma.skill.delete({
+    await prisma.skill.deleteMany({
       where: { id },
     });
     res.status(204).end();

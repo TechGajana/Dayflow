@@ -39,8 +39,12 @@ export default function SkillsCard({ userId, skills }: SkillsCardProps) {
   };
 
   const handleRemove = async (skillId: string) => {
-    await deleteSkill(skillId);
-    router.refresh();
+    try {
+      await deleteSkill(skillId);
+      router.refresh();
+    } catch (err) {
+      console.error("Failed to delete skill:", err);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
