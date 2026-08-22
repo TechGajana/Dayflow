@@ -4,13 +4,13 @@ import { z } from 'zod'
 import { readSession } from '@/lib/auth'
 import db from '@/lib/db'
 
-const inputSchema = z.object({ module: z.enum(['Recruitment', 'Performance', 'Assets', 'Expenses']), title: z.string().min(2).max(120).optional(), detail: z.string().max(500).optional(), amount: z.number().int().nonnegative().optional(), userId: z.string().optional(), id: z.number().int().optional(), status: z.enum(['open', 'closed', 'available', 'assigned', 'pending', 'approved', 'rejected']).optional() })
+const inputSchema = z.object({ module: z.enum(['Recruitment', 'Performance', 'Assets', 'Expenses', 'Payroll']), title: z.string().min(2).max(120).optional(), detail: z.string().max(500).optional(), amount: z.number().int().nonnegative().optional(), userId: z.string().optional(), id: z.number().int().optional(), status: z.enum(['open', 'closed', 'available', 'assigned', 'pending', 'approved', 'rejected']).optional() })
 async function session() { return readSession((await cookies()).get('dayflow_session')?.value) }
 
 export async function GET(request: Request) {
   const actor = await session(); if (!actor) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const module = new URL(request.url).searchParams.get('module')
-  if (module === 'Payroll') return NextResponse.json({ items: db.prepare(`SELECT u.name, s.basic, s.hra, s.allowances, s.deductions, s.net_pay netPay FROM salaries s JOIN users u ON u.id=s.user_id WHERE u.company_id=? ORDER BY u.name`).all(actor.companyId) })
+  if (module === 'Payroll') { const items = actor.role === 'admin' ? db.prepare(`SELECT u.id, u.name, s.basic, s.hra, s.allowances, s.deductions, s.net_pay netPay FROM salaries s JOIN users u ON u.id=s.user_id WHERE u.company_id=? ORDER BY u.name`).all(actor.companyId) : db.prepare(`SELECT u.id, u.name, s.basic, s.hra, s.allowances, s.deductions, s.net_pay netPay FROM salaries s JOIN users u ON u.id=s.user_id WHERE u.id=?`).all(actor.id); return NextResponse.json({ items }) }
   if (module === 'Reports') return NextResponse.json({ items: db.prepare(`SELECT 'Employees' label, COUNT(*) value FROM users WHERE company_id=? UNION ALL SELECT 'Leave requests', COUNT(*) FROM leave_requests l JOIN users u ON u.id=l.user_id WHERE u.company_id=? UNION ALL SELECT 'Expenses', COUNT(*) FROM expenses WHERE company_id=?`).all(actor.companyId, actor.companyId, actor.companyId) })
   const queries: Record<string, string> = {
     Recruitment: 'SELECT id, title, department, status, created_at createdAt FROM job_postings WHERE company_id=? ORDER BY created_at DESC',
@@ -27,6 +27,7 @@ export async function POST(request: Request) {
   const input = parsed.data
   if (!input.id && !input.title) return NextResponse.json({ error: 'A title or description is required.' }, { status: 400 })
   const title = input.title || ''
+  if (input.module === 'Payroll') { if (actor.role !== 'admin' || !input.userId || !input.amount || input.amount < 1 || !db.prepare('SELECT id FROM users WHERE id=? AND company_id=?').get(input.userId, actor.companyId)) return NextResponse.json({ error: 'Only admin can set a valid employee wage.' }, { status: 403 }); const basic = Math.round(input.amount * 0.5); const hra = Math.round(basic * 0.5); const allowances = Math.max(0, input.amount - basic - hra); db.prepare(`INSERT INTO salaries (user_id,basic,hra,allowances,deductions,net_pay) VALUES (?,?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET basic=excluded.basic,hra=excluded.hra,allowances=excluded.allowances,net_pay=excluded.net_pay,updated_at=CURRENT_TIMESTAMP`).run(input.userId, basic, hra, allowances, 0, input.amount); return NextResponse.json({ ok: true }, { status: 201 }) }
   if (input.id && input.status) {
     if (!['admin', 'hr', 'manager'].includes(actor.role)) return NextResponse.json({ error: 'You do not have permission to update records.' }, { status: 403 })
     const table = input.module === 'Recruitment' ? 'job_postings' : input.module === 'Assets' ? 'assets' : input.module === 'Expenses' ? 'expenses' : ''
